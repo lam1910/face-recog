@@ -1,0 +1,23 @@
+3 types:
+
+1. 2 systems run parallel (fingerprint, face recognition):
+    - meaning we don't specify the person will be checked before checking him/her.
+    - having a folder with images of all the employee.
+    - when one decided to check in using image, compare the newly-captured pic with the photo on the src folder. Will return a list of potential match.
+    - prompt enter ids (or other mean of differentiate ppl to double check
+    - updated: adding method of 3rd types with fingerprint as fall-back option
+
+2. 1 system only with proof of identification first (id):
+    - first enter the person identification first
+    - could have a folder with all the images of the employee on subfolder named like the identification
+    - allowing multiple photo of a person
+    - after selecting the person to check in, take a picture
+    - compare to all picture in that subfolder, if return True meaning correct identification.
+
+3. 1 system without proof of identification first:
+    - src img folder will have the following structure: all portrait photo of all the employees (thumbnails) in the main folder with name as his/her ids plus having subfolder with name matched the name of the thumbnails, inside each subfolder is all the images already known of that person (old thumbnails, ava other channels, ...) (only pic with their face only, do not added group photo here)
+    - system will check all the thumbnails first to get list of potential matches
+    - after get the list, check with the image inside the subfolder of each person, select the person with the highest accuracy average or whatever built-in method used. (lowest distance)
+    - check with db get detailed info of the person, prompt user to confirm identification (early stage to get feedback for retrain) (may retain at later stage to avoid mis identified)
+    - store 3 ids with lowest distances to fast recheck
+    - if still not recognized tol += 0.05
