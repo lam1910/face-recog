@@ -6,6 +6,8 @@ Created on Tue Sep  1 16:55:21 2020
 @source: https://github.com/ageitgey/face_recognition/blob/master/examples/face_recognition_svm.py
 """
 
+
+# attempt to having multiple picture for 1 person
 # Train multiple images per person
 # Find and recognize faces in an image using a SVC with scikit-learn
 
