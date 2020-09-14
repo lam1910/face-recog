@@ -23,7 +23,7 @@ You will need at least, Cmake (should be available on Ubuntu LTS and MacOS versi
 
 1. For Unix systems:
 
-Pre-reqs:
+    a.Pre-reqs:
 	
 	- python 3 installed
 
@@ -31,18 +31,18 @@ Pre-reqs:
 	
 	- Linux: [List of required packages](https://github.com/ageitgey/face_recognition/blob/master/Dockerfile#L6-L34)
 
-Steps run the following commands one by one:
-```
-git clone https://github.com/davisking/dlib.git
-cd dlib
-mkdir build; cd build; cmake ..; cmake --build .
-cd ..
-python3 setup.py install
-```
+    b.Steps run the following commands one by one:
+    ```
+    git clone https://github.com/davisking/dlib.git
+    cd dlib
+    mkdir build; cd build; cmake ..; cmake --build .
+    cd ..
+    python3 setup.py install
+    ```
 
 2. For Windows systems:
 
-Pre-reqs:
+    a.Pre-reqs:
 
 	- Microsoft Visual Studio 2015 (or newer) with C/C++ Compiler installed
 
@@ -52,7 +52,7 @@ Pre-reqs:
 
 	- (ONLY FOR older versions of dlib) Boost library version 1.63 or newer
 
-Steps:
+    b.Steps:
 
 	- Install scipy and numpy+mkl packages
 
@@ -70,10 +70,10 @@ Steps:
 
 		- Open Developer Command Prompt for Visual Studio and go to the current directory of Boost extracted and try these commands to compile Boost:
 
-```
-bootstrap
-b2 -a --with-python address-model=64 toolset=msvc runtime-link=static
-```
+            ```
+            bootstrap
+            b2 -a --with-python address-model=64 toolset=msvc runtime-link=static
+            ```
 
 	- (If you have already compiled Boost skip this step) If you already download the binary release just extract the contents to C:\local\boost_1_XX_X
 
@@ -81,13 +81,13 @@ b2 -a --with-python address-model=64 toolset=msvc runtime-link=static
 
 	- Go to dlib directory and open cmd and follow these commands to build dlib: (remember to replace XX with the current version of Boost you have):
 
-```
-set BOOST_ROOT=C:\local\boost_X_XX_X
-set BOOST_LIBRARYDIR=C:\local\boost_X_XX_X\stage\lib
-python setup.py install --yes USE_AVX_INSTRUCTIONS 
-<or> 
-python setup.py install --yes USE_AVX_INSTRUCTIONS --yes DLIB_USE_CUDA
-```
+            ```
+            set BOOST_ROOT=C:\local\boost_X_XX_X
+            set BOOST_LIBRARYDIR=C:\local\boost_X_XX_X\stage\lib
+            python setup.py install --yes USE_AVX_INSTRUCTIONS 
+            <or> 
+            python setup.py install --yes USE_AVX_INSTRUCTIONS --yes DLIB_USE_CUDA
+            ```
 	
 	- Now simply install face_recognition with pip install face_recognition
 
@@ -95,14 +95,30 @@ python setup.py install --yes USE_AVX_INSTRUCTIONS --yes DLIB_USE_CUDA
 
 All packages needed to run had been added to the requirements.txt file. All you have to do is type this following command:
 ```
-pip install requirements.txt
+pip install -r requirements.txt
+```
+Note that in order to install psycopg2 on ubuntu (and linux system in general), you will need a package on debian called libpq-dev, which in turn need a package called libpq5.
+To install them, simply do this:
+```
+sudo apt-get update
+sudo apt install libpq5
+sudo apt install libpq-dev
+```
+
+Or use can use whatever package manager your system currently had.
+
+**IMPORTANT NOTE FOR ANACONDA DIST USERS:** 
+Currently we choose opencv library for image and video processing, however opencv is regrettably one of the few higher visibility packages that not natively supported by conda. Since that is the case, we will use pip to install opencv for this program. The package will be included into the requirements.txt file so you do not need to consider anything else if you have not use opencv on python before. However, if you have install it using conda channel, you will need to remove it first
+
+```
+conda remove <-n name_of_the_virtualenv> opencv
 ```
 
 ### How to use
 
 1. Steps:
 	- Get a lot of pictures of all the people in your insitution. Store them at the dataset folder first with the structure like:
-```
+	```
         dataset/
             <person_1>/
                 <person_1_face-1>.jpg
@@ -124,7 +140,7 @@ pip install requirements.txt
                 .
                 .
                 <person_n_face-n>.jpg
-```
+    ```
 
 	- Since what we need to run the system is a vector represented each pictures + the label for it, after run the load method of the LoadTrainset class (this must be done at least once), you can choose to save the dataframe to either a database (providing correct connection) or a excel file (providing correct filepath). You can load back from either source to save time.
 
@@ -137,5 +153,3 @@ pip install requirements.txt
 	- Set known\_face\_encodings and known\_face\_name with the array of vectors and the label above.
 
 	- Run face\_recognize method of the CheckIn class. You can choose whether or not to use a model to get the name.
-
-
