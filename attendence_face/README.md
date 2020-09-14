@@ -9,9 +9,10 @@ You wil need to install numpy+mkl version of numpy to make the system work. Fort
 
 ### Important Note For Unix system
 
-DISCLAIMER: Have not tried for Mac yet. Also, I test on LTS version only.
+DISCLAIMER: Have not tried for MacOS yet. Also, I had only tested on LTS version only.
 
-opencv2 library for python seems to run smoother on windows, and supported most functions for image showing. However, this problem can be easily fix with googling the error.
+opencv2 library for python seems easier to install on windows, and supported most functions for image showing when using the conda packages.
+However, you would find out that running on Unix is much faster and smoother than running on windows, especially if you choose to run without CUDA-supported on both systems. if you have not tried it out, I recommended try to run the program on Unix first
 
 
 ### Important Note For All System
