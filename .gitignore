@@ -18,3 +18,7 @@ dataset/unknown_faces/IMG_9563.JPG
 /utilis/
 /main.py
 .idea
+cv2
+np
+os
+test-out.avi
