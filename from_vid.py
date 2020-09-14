@@ -16,9 +16,7 @@ PATH_TO_IMAGE_UNKNOWN = 'dataset/unknown_faces'
 # specific demo. If you have trouble installing it, try any of the other demos that don't require it instead.
 
 # Get a reference to webcam #0 (the default one)
-video_capture = cv2.VideoCapture(os.path.join(PATH_TO_IMAGE_UNKNOWN, 'video', 'MOVIE.mp4'))
-fourcc = cv2.VideoWriter_fourcc(*'XVID')
-video_out = cv2.VideoWriter('test-out.avi', fourcc, 20, (640,480))
+video_capture = cv2.VideoCapture(0)
 
 # Load a sample picture and learn how to recognize it.
 # Load a sample picture and learn how to recognize it.
@@ -114,7 +112,7 @@ while True:
         cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
 
     # Display the resulting image
-    video_out.write(frame)
+    cv2.imshow('Video', frame)
 
     print('End Frame')
     # Hit 'q' on the keyboard to quit!
@@ -122,7 +120,5 @@ while True:
         break
 
 # Release handle to the webcam
-video_out.release()
 video_capture.release()
-
 cv2.destroyAllWindows()

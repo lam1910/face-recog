@@ -13,3 +13,7 @@ dataset/unknown_faces/IMG_2132.JPG
 dataset/unknown_faces/IMG_2200.JPG
 dataset/unknown_faces/IMG_2371.JPG
 dataset/unknown_faces/IMG_9563.JPG
+/attendence_face/dataset/
+/core/
+/utilis/
+/main.py

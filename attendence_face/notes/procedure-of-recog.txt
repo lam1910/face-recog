@@ -1,0 +1,9 @@
+- procedure as of 14/9/2020:
+
+	+ vectorize by the library
+	+ get names list as data labels
+	+ get input for webcam, process one of every two frames
+	+ doing some classiification by sklearn. (which is in turn super simple, actual product should included more)
+	+ using face_distance function of the library to check back whether the prediction is good or not, if it is return the name, if not return unknown.
+		(the situation of having 2 similars face in the library in might not be caught prefectly) (also the situation of 1 outside person having very similar face as one users is not addressed properly, which is even worse) 
+	+ print the result at the non-processed frame (for all known users)

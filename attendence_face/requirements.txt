@@ -1,0 +1,16 @@
+pip>=8.1.2
+xlrd
+tox==2.3.1
+dlib>=19.3.0
+numpy
+scipy
+face_recognition
+Click>=6.0
+opencv-python>=4.0.1
+scikit-learn>=0.23.1
+Unidecode
+sqlalchemy
+psycopg2
+mysqlclient
+cx-Oracle
+pyodbc

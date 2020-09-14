@@ -1,0 +1,9 @@
+﻿1. Note chung
+	- Không khuyến khích sử dụng svc với param về weight_class có sẵn.
+
+2. Note ngày 14/9/2020:
+	- Có thể thêm adaboost classifier trong sklearn vào thử nghiệm
+
+	- Có thể thử nghiệm với ANN nữa (trade-off là sẽ khá lâu cho phần nhận diện (khó test video thời gian thực, sẽ phải cải tiến để check 1 khung - chờ dữ liệu qua ANN xong rồi mới nhả cam ra cho chạy tiếp))
+
+	- Có thể tính chay adaboost để ghép với ANN (thời gian theo paper trên về nhận diện trong ảnh được cải thiện đáng kể) (trade-off là sẽ khó tính với số lượng nhân sự lớn)
