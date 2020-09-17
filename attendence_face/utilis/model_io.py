@@ -7,7 +7,8 @@ Created on Thu Sep  3 15:05:15 2020
 import os
 import pickle
 
-# will return true if successed, false otherwise file path and name must be 
+
+# will return true if succeed, false otherwise file path and name must be
 # new, otherwise return false
 def export_bin(obj_to_export, file_path = 'finalized_model.sav'):
     file_path = os.path.join('models', file_path)
@@ -24,6 +25,7 @@ def export_bin(obj_to_export, file_path = 'finalized_model.sav'):
     except Exception:
         print('Writing out to: ' + file_path + ' encounter some errors. Check syntax.')
         return False
+
 
 # load something from file path (will use to load an outside file contains 
 # model)

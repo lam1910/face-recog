@@ -12,7 +12,7 @@ from utilis.check_back_face import double_check_result
 from utilis.convert_to_no_accent import convert
 
 
-class CheckIn():
+class CheckIn:
     known_face_encodings = []
     known_face_names = []
     # Get a reference to webcam #0 (the default one)
@@ -44,7 +44,6 @@ class CheckIn():
     def get_face_name_by_model(self, face_enc, clf):
         try:
             name = clf.predict([face_enc])[0]
-            print("Name inputed: {} of type {}".format(name, type(name)))
             index_of_name = self.known_face_names.index(name)
             name_after_check = double_check_result(name, self.known_face_encodings[index_of_name], face_enc)
         # every errors that can be caught now included Errors that does not 
@@ -53,13 +52,12 @@ class CheckIn():
         except Exception:
             name_after_check = 'Unknown'
         return name_after_check
-        
-    
+
     # In the face_recognize method, if there are only unknowns in the list 
     # of names, it will not print out anything.
     def face_recognize(self, model=None):
         video_capture = cv2.VideoCapture(0)
-        if model == None:
+        if model is None:
             while True:
                 # Grab a single frame of video
                 ret, frame = video_capture.read()
@@ -132,7 +130,6 @@ class CheckIn():
                 # Hit 'q' on the keyboard to quit!
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
-                
-                
+
         video_capture.release()
         cv2.destroyAllWindows()

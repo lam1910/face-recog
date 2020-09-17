@@ -9,7 +9,8 @@ import os
 import pandas as pd
 from sqlalchemy.exc import ArgumentError
 
-class LoadTrainset():
+
+class LoadTrainset:
     trainset_path = 'dataset/train_fol/'
     encodings = []
     names = []
@@ -89,4 +90,3 @@ class LoadTrainset():
         df = pd.read_excel(name)
         self.encodings = df.iloc[:, :128].values.tolist()
         self.names = df['Name'].values.tolist()
-         
