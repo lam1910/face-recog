@@ -72,7 +72,7 @@ class LoadTrainset:
         df = pd.DataFrame(self.encodings)
         df['Name'] = self.names
         try:
-            df.to_excel(name, index=False)
+            df.to_excel(name, index=False, engine='xlsxwriter')
         except Exception:
             print('Unexpected errors. Return False')
             return False
