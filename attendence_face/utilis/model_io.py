@@ -10,7 +10,7 @@ import pickle
 
 # will return true if succeed, false otherwise file path and name must be
 # new, otherwise return false
-def export_bin(obj_to_export, file_path = 'finalized_model.sav'):
+def export_bin(obj_to_export, file_path='finalized_model.sav'):
     file_path = os.path.join('models', file_path)
     try:
         pickle.dump(obj_to_export, open(file_path, 'w+b'))

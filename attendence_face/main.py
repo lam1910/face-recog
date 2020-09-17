@@ -17,9 +17,9 @@ test_dataset.load_from_file('dataset/test-2.xlsx')
 
 # model
 clf = Trainer(test_dataset.encodings, test_dataset.names, 'rf')
-new_clf = clf.train_model(wr_out=False, file_name=None, svc_kernel='sigmoid', 
-                          svc_decision_function_shape='ovo', svc_gamma='auto', 
-                          n_estimators=100, rf_crit='gini', 
+new_clf = clf.train_model(wr_out=False, file_name=None, svc_kernel='sigmoid',
+                          svc_decision_function_shape='ovo', svc_gamma='auto',
+                          n_estimators=100, rf_crit='gini',
                           max_feat='auto', warm_start=False)
 
 # test write model out
