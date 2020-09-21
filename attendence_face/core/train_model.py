@@ -105,7 +105,7 @@ class Trainer:
                 if final_res is None:
                     print('You have chosen not to write the model out. Return the model now')
                     return clf
-        # if user choose the deep learning
+        # if user choose the neural network option
         elif self.method == 'neural network' or self.method == 'nn' or self.method == 'ann':
             # if input_dim = None
             if input_dim is None:
