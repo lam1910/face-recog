@@ -11,7 +11,7 @@ PATH_TO_IMAGE_UNKNOWN = 'dataset/unknown_faces'
 # and drawing a box around each person that was identified.
 
 # Load a sample picture and learn how to recognize it.
-me_image = face_recognition.load_image_file(os.path.join(PATH_TO_IMAGE_KNOWN, 'me.jpg'))
+me_image = face_recognition.load_image_file(os.path.join(PATH_TO_IMAGE_KNOWN, 'Nguyễn Ngọc Lâm.jpg'))
 va_image = face_recognition.load_image_file(os.path.join(PATH_TO_IMAGE_KNOWN, 'Nguyễn thị Vân Anh.JPG'))
 q_image = face_recognition.load_image_file(os.path.join(PATH_TO_IMAGE_KNOWN, 'Lê Duy Quang.JPG'))
 g_image = face_recognition.load_image_file(os.path.join(PATH_TO_IMAGE_KNOWN, 'Phạm Hoàng Giang.JPG'))
