@@ -154,3 +154,14 @@ conda remove <-n name_of_the_virtualenv> opencv
 	- Set known\_face\_encodings and known\_face\_name with the array of vectors and the label above.
 
 	- Run face\_recognize method of the CheckIn class. You can choose whether or not to use a model to get the name.
+
+2. How to stop:
+
+    Press 'q' no the keyboard to exit system and release the camera. On the rare occasion of unexpected stop, the camera process will be left unattended. In that case, find the python process and kill it.
+
+3. Note:
+
+    - Only print out the name of the person in the console, does not mark the face in live feed
+    - Return anyone that does not pass the double check as unknown, but will not print out anything 
+    - Only has a very small sample size, thus the parameters for model is mostly the default parameters
+    - Also with small sample size, the model may gives wrong prediction frequently
