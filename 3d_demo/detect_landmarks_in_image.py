@@ -9,9 +9,9 @@ import collections
 fa = face_alignment.FaceAlignment(face_alignment.LandmarksType._3D, device='cpu', flip_input=True)
 
 try:
-    input_img = io.imread('../dataset/known_faces/Nguyễn Ngọc Lâm.jpg')
+    input_img = io.imread('../dataset/known_faces/Ngô Thanh Vân.jpg')
 except FileNotFoundError:
-    input_img = io.imread('dataset/known_faces/Nguyễn Ngọc Lâm.jpg')
+    input_img = io.imread('dataset/known_faces/Ngô Thanh Vân.jpg')
 
 preds = fa.get_landmarks(input_img)[-1]
 
