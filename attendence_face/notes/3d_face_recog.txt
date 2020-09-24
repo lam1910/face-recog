@@ -1,0 +1,6 @@
+methods:
+
+    - stereo acquisition: several pictures taken by several cameras pre calibrated to reconstruct a 3d model. Downside: sensitive to lighting
+    - structured light: project a structured light pattern on the surface of the object. Downside: costly, extremely sensitive to lighting and distance
+    - active sensing: laser to calculate distance and a range image. Downside: expensive equipment + time-consuming
+    
