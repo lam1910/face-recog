@@ -3,4 +3,30 @@ methods:
     - stereo acquisition: several pictures taken by several cameras pre calibrated to reconstruct a 3d model. Downside: sensitive to lighting
     - structured light: project a structured light pattern on the surface of the object. Downside: costly, extremely sensitive to lighting and distance
     - active sensing: laser to calculate distance and a range image. Downside: expensive equipment + time-consuming
-    
+
+classification criteria:
+
+    - jaw height (point 0-4)
+    - 1/2 jaw circumference (5-9)
+    - lower jawbone angle (00:5 and 5:10)
+    - forehead width (distance between 2 outer points of two eyebrows) (point 17, 26)
+    - distance between 2 eyebrows (distance between 2 inner points of two eyebrows) (point 21, 22)
+    - average width of eyes (point 36, 39 and point 42, 45)
+    - average height of eyes (max(point 37, 41 and point 38, 40) and max(point 43, 47 and point 44, 46))
+    - average distance between eyes and brows (avg(point 19, 37 and point 19, 38) and avg(point 24, 43 and point 24, 44))
+    - nose length (point 27, 31)
+    - nose width (nostril) (point 31, 35)
+    - distance between upper lip and nostril (point 33, 51)
+    - mouth width (point 48, 54)
+    - upper lip height avg(point 50, 61 and point 52, 63)
+    - lower lip height avg(point 56, 65 and point 58, 67)
+    - distance between lower lip to chin (point 57, 9)
+    - chin angle (point 8, 9 and point 9, 10)
+
+steps:
+
+    - create a model
+    - calculate the above criteria
+    - create and matrix of information
+    - normalize that matrix
+    - put through an classifier (preferably ensemble)
