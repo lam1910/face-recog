@@ -5,6 +5,7 @@ from skimage import io
 import collections
 import cv2
 import numpy as np
+from sklearn.preprocessing import normalize
 
 
 def calculate_jaw_height(lists_of_landmarks):
@@ -26,7 +27,7 @@ def calculate_forehead_width(lists_of_landmarks):
 
 
 def calculate_eyebrows_distance(lists_of_landmarks):
-    return float(np.linalg.norm(lists_of_landmarks[21] - lists_of_landmarks[10]))
+    return float(np.linalg.norm(lists_of_landmarks[21] - lists_of_landmarks[22]))
 
 
 def calculate_eye_width(lists_of_landmarks):
@@ -90,23 +91,26 @@ def calculate_chin_angle(lists_of_landmarks):
 
 
 def calculate_face(lists_of_landmarks):
-    criteria = ['Jaw height', 'Jaw circumference', 'Lower jawbone angle', 'Forehead width', 'Eyebrows distance',
+    criteria = ['Jaw height', 'Jaw circumference', 'Forehead width', 'Eyebrows distance',
                 'Eye width', 'Eye height', 'Eye-eyebrow distance', 'Nose length', 'Nose width',
                 'Upper lip-nostril distance', 'Mouth width', 'Upper lip height', 'Lower lip height',
-                'Lower lip-chin distance', 'Chin angle']
+                'Lower lip-chin distance', 'Lower jawbone angle', 'Chin angle']
+    number_cal = \
+        [
+            calculate_jaw_height(lists_of_landmarks), calculate_jaw_height(lists_of_landmarks),
+            calculate_forehead_width(lists_of_landmarks), calculate_eyebrows_distance(lists_of_landmarks),
+            calculate_eye_width(lists_of_landmarks), calculate_eye_height(lists_of_landmarks),
+            calculate_eye_brow_distance(lists_of_landmarks), calculate_nose_length(lists_of_landmarks),
+            calculate_nose_width(lists_of_landmarks), calculate_lip_nostril_distance(lists_of_landmarks),
+            calculate_mouth_width(lists_of_landmarks), calculate_upper_lip_height(lists_of_landmarks),
+            calculate_lower_lip_height(lists_of_landmarks), calculate_lip_chin_distance(lists_of_landmarks),
+        ]
+    number_cal = normalize([number_cal])
+    number_cal = np.append(number_cal, calculate_jaw_angle(lists_of_landmarks))
+    number_cal = np.append(number_cal, calculate_chin_angle(lists_of_landmarks))
     return dict(
         zip(
-            criteria,
-            [
-                calculate_jaw_height(lists_of_landmarks), calculate_jaw_height(lists_of_landmarks),
-                calculate_jaw_angle(lists_of_landmarks), calculate_forehead_width(lists_of_landmarks),
-                calculate_eyebrows_distance(lists_of_landmarks), calculate_eye_width(lists_of_landmarks),
-                calculate_eye_height(lists_of_landmarks), calculate_eye_brow_distance(lists_of_landmarks),
-                calculate_nose_length(lists_of_landmarks), calculate_nose_width(lists_of_landmarks),
-                calculate_lip_nostril_distance(lists_of_landmarks), calculate_mouth_width(lists_of_landmarks),
-                calculate_upper_lip_height(lists_of_landmarks), calculate_lower_lip_height(lists_of_landmarks),
-                calculate_lip_chin_distance(lists_of_landmarks), calculate_chin_angle(lists_of_landmarks)
-            ]
+            criteria, number_cal
         )
     )
 
@@ -139,9 +143,9 @@ vid.release()
 cv2.destroyAllWindows()
 
 try:
-    input_img = io.imread('../dataset/known_faces/me_2.png')
+    input_img = io.imread('../dataset/train_fol/Trần Thị Thùy Linh/118709585_685843948808260_6668964229337761510_n.jpg')
 except FileNotFoundError:
-    input_img = io.imread('dataset/known_faces/me_2.png')
+    input_img = io.imread('dataset/train_fol/Trần Thị Thùy Linh/118709585_685843948808260_6668964229337761510_n.jpg')
 
 # old image
 preds = fa.get_landmarks(input_img)[-1]
@@ -249,7 +253,7 @@ new_pic = calculate_face(preds)
 # some camera produce the distance differently, for example, my dslr produces the distance calculated 2 times the
 # laptop webcam
 # attempt normalize, kind of success
-from sklearn.preprocessing import normalize
-
-old_pic = normalize([list(old_pic.values())])
-new_pic = normalize([list(new_pic.values())])
+# create an array
+import pandas as pd
+old_pic = pd.DataFrame([old_pic])
+new_pic = pd.DataFrame([new_pic])
