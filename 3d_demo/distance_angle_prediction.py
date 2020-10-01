@@ -80,14 +80,13 @@ def calculate_face(lists_of_landmarks):
         for j in range(i, len(lists_of_landmarks)):
             number_cal.append(calculate_distance(lists_of_landmarks, i, j))
 
-    special_distance = \
-        [
-            calculate_eye_width(lists_of_landmarks), calculate_eye_height(lists_of_landmarks),
-            calculate_eye_brow_distance(lists_of_landmarks), calculate_upper_lip_height(lists_of_landmarks),
-            calculate_lower_lip_height(lists_of_landmarks), calculate_jaw_angle(lists_of_landmarks),
-            calculate_chin_angle(lists_of_landmarks), calculate_nose_angle(lists_of_landmarks),
-            calculate_jawbone_angle(lists_of_landmarks)
-        ]
+    special_distance = [
+        calculate_eye_width(lists_of_landmarks), calculate_eye_height(lists_of_landmarks),
+        calculate_eye_brow_distance(lists_of_landmarks), calculate_upper_lip_height(lists_of_landmarks),
+        calculate_lower_lip_height(lists_of_landmarks), calculate_jaw_angle(lists_of_landmarks),
+        calculate_chin_angle(lists_of_landmarks), calculate_nose_angle(lists_of_landmarks),
+        calculate_jawbone_angle(lists_of_landmarks)
+    ]
     number_cal = number_cal + special_distance
     return normalize([number_cal]).tolist()[0]
 
@@ -175,7 +174,7 @@ final_label.append(names[idx_to_check])
 # id_to_append = [0, 2, 4, 5, 7, 8, 11, 12, 13, 14, 15]
 
 # applying pca
-pca = PCA(5, svd_solver='auto')
+pca = PCA(n_components=5, svd_solver='auto')
 preds = pca.fit_transform(preds)
 
 # final_table = pd.DataFrame(preds)
@@ -191,8 +190,8 @@ X = crit_3d.iloc[:, :-1].values
 y = crit_3d.iloc[:, -1].values
 
 # classifier
-clf = RandomForestClassifier(20, random_state=0, warm_start=True)
-
+# max_feature = None since having small number of features already
+clf = RandomForestClassifier(125, max_features='auto', warm_start=True)
 clf.fit(X, y)
 
 # -----------------------------------------------------------------------------------
@@ -221,15 +220,71 @@ vid.release()
 # Destroy all the windows
 cv2.destroyAllWindows()
 
-preds = fa.get_landmarks(frame)[-1]
-new_pic = calculate_face(preds)
+test_preds = fa.get_landmarks(frame)[-1]
+new_pic = calculate_face(test_preds)
+new_pic = np.array(new_pic)
 new_pic = pca.transform([new_pic])
 
 # get test pic
 # test_img = io.imread('attendence_face/dataset/train_fol/Ma Chí Định/IMG_E0301.JPG')
 # test_preds = fa.get_landmarks(test_img)[-1]
 # test_pic = calculate_face(test_preds)
-# predict
-clf.predict(new_pic)
+# predict at the point return likelihood of each classes instead of get the class name
+clf.predict_proba(new_pic)
+
+
+# after this write function to decide whether the highest probability class is good enough for a conclusion
+# below is a proposed function
+# name: is the content of the array return from predict function (which aligned with the highest probability class
+# in the 2nd arg
+# prob_each_class: is the array from predict_proba method return the probability of each class
+# clf_class_name: list of class names of the classifier (label)
+# thres: activation value, if prob > thres auto return name, otherwise go into detail abt the value
+def name_decider(name, prob_each_class, clf_class_name, thres):
+    # how this works
+    # if n < 3: return name right away
+    # if max_prob >= thres also return name right away
+    # if max_prob - 2nd_max >= 2/n also return name
+    # if max_prob < 2/n return unknown (inconclusive)
+    # if more than 3 max pos return unknown
+    # else return 3 possible name
+
+    max_prob = float(prob_each_class.max())
+    # the copy() method is crucial (similar to pass-by reference and pass-by value type of problem)
+    tmp = prob_each_class.copy()
+    tmp.sort()
+    second_max_prob = float(tmp[0][-2])
+    third_max_prob = float(tmp[0][-3])
+    n_class = prob_each_class.shape[1]
+    if n_class < 3:
+        return name
+    if max_prob >= thres:
+        return name
+    if max_prob - second_max_prob >= 2 / n_class:
+        return name
+
+    # else case
+    max_pos = np.where(prob_each_class == max_prob)[1]
+    if len(max_pos) > 3:
+        return 'Unknown'
+    elif len(max_pos) == 3:
+        max_pos = max_pos.tolist()
+    elif len(max_pos) == 2:
+        max_pos = max_pos.tolist()
+        max_pos.append(np.where(prob_each_class == third_max_prob)[1].tolist()[0])
+    elif len(max_pos) == 1:
+        max_pos = max_pos.tolist()
+        second_pos = np.where(prob_each_class == second_max_prob)[1]
+        if len(second_pos) > 1:
+            for i in [0, 1]:
+                max_pos.append(second_pos.tolist()[i])
+        else:
+            max_pos.append(second_pos.tolist()[0])
+            third_pos = np.where(prob_each_class == third_max_prob)[1]
+            max_pos.append(third_pos.tolist()[0])
+
+    return tuple(clf_class_name[i] for i in max_pos)
+
+
 # clf.predict([list(test_pic.values())])
 # -----------------------------------------------------------------------------------
