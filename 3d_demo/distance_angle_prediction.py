@@ -1,6 +1,7 @@
 import face_alignment
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+# uncomment 2 lines below if you want to test the manual part of deciding what had been correctly modeled
+# import matplotlib.pyplot as plt
+# from mpl_toolkits.mplot3d import Axes3D
 import collections
 from skimage import io
 import numpy as np
@@ -124,54 +125,65 @@ pred_types = {'face': pred_type(slice(0, 17), (0.682, 0.780, 0.909, 0.5)),
               'lips': pred_type(slice(48, 60), (0.596, 0.875, 0.541, 0.3)),
               'teeth': pred_type(slice(60, 68), (0.596, 0.875, 0.541, 0.4))
               }
-preds = []
-final_label = []
-idx_to_check = -1
-# died at id = 9 (0-based)
-
-idx_to_check += 1
-input_img = io.imread(paths[idx_to_check])
-pred = fa.get_landmarks(input_img)[-1]
-
-# 2D-Plot
-plot_style = dict(marker='o',
-                  markersize=4,
-                  linestyle='-',
-                  lw=2)
-
-fig = plt.figure(figsize=plt.figaspect(.5))
-ax = fig.add_subplot(1, 2, 1)
-ax.imshow(input_img)
-
-for pred_type in pred_types.values():
-    ax.plot(pred[pred_type.slice, 0],
-            pred[pred_type.slice, 1],
-            color=pred_type.color, **plot_style)
-
-ax.axis('off')
-
-# 3D-Plot
-ax = fig.add_subplot(1, 2, 2, projection='3d')
-surf = ax.scatter(pred[:, 0] * 1.2,
-                  pred[:, 1],
-                  pred[:, 2],
-                  c='cyan',
-                  alpha=1.0,
-                  edgecolor='b')
-
-for pred_type in pred_types.values():
-    ax.plot3D(pred[pred_type.slice, 0] * 1.2,
-              pred[pred_type.slice, 1],
-              pred[pred_type.slice, 2], color='blue')
-
-ax.view_init(elev=90., azim=90.)
-ax.set_xlim(ax.get_xlim()[::-1])
-plt.show()
-
-preds.append(calculate_face(pred))
-final_label.append(names[idx_to_check])
+# -----------------------------------------------------------------------------------
+# manually select which one the library can construct correctly the face
+# preds = []
+# final_label = []
+# idx_to_check = -1
+# # died at id = 9 (0-based)
+#
+# idx_to_check += 1
+# input_img = io.imread(paths[idx_to_check])
+# pred = fa.get_landmarks(input_img)[-1]
+#
+# # 2D-Plot
+# plot_style = dict(marker='o',
+#                   markersize=4,
+#                   linestyle='-',
+#                   lw=2)
+#
+# fig = plt.figure(figsize=plt.figaspect(.5))
+# ax = fig.add_subplot(1, 2, 1)
+# ax.imshow(input_img)
+#
+# for pred_type in pred_types.values():
+#     ax.plot(pred[pred_type.slice, 0],
+#             pred[pred_type.slice, 1],
+#             color=pred_type.color, **plot_style)
+#
+# ax.axis('off')
+#
+# # 3D-Plot
+# ax = fig.add_subplot(1, 2, 2, projection='3d')
+# surf = ax.scatter(pred[:, 0] * 1.2,
+#                   pred[:, 1],
+#                   pred[:, 2],
+#                   c='cyan',
+#                   alpha=1.0,
+#                   edgecolor='b')
+#
+# for pred_type in pred_types.values():
+#     ax.plot3D(pred[pred_type.slice, 0] * 1.2,
+#               pred[pred_type.slice, 1],
+#               pred[pred_type.slice, 2], color='blue')
+#
+# ax.view_init(elev=90., azim=90.)
+# ax.set_xlim(ax.get_xlim()[::-1])
+# plt.show()
+#
+# preds.append(calculate_face(pred))
+# final_label.append(names[idx_to_check])
+# -----------------------------------------------------------------------------------
 
 # id_to_append = [0, 2, 4, 5, 7, 8, 11, 12, 13, 14, 15]
+# code to substitute the code segment that had been commented above. Essentially going to get identical result
+preds = []
+final_label = []
+for i in [0, 2, 4, 5, 7, 8, 11, 12, 13, 14, 15]:
+    input_img = io.imread(paths[i])
+    pred = fa.get_landmarks(input_img)[-1]
+    preds.append(calculate_face(pred))
+    final_label.append(names[i])
 
 # applying pca
 pca = PCA(n_components=5, svd_solver='auto')
@@ -191,7 +203,7 @@ y = crit_3d.iloc[:, -1].values
 
 # classifier
 # max_feature = None since having small number of features already
-clf = RandomForestClassifier(125, max_features='auto', warm_start=True)
+clf = RandomForestClassifier(125, criterion='entropy', max_features='auto', warm_start=True)
 clf.fit(X, y)
 
 # -----------------------------------------------------------------------------------
@@ -230,6 +242,8 @@ new_pic = pca.transform([new_pic])
 # test_preds = fa.get_landmarks(test_img)[-1]
 # test_pic = calculate_face(test_preds)
 # predict at the point return likelihood of each classes instead of get the class name
+# show out the probability of the picture is belong to each class
+# 1 of the realistic activation function is y = 0 if x < 1/n and 1 otherwise
 clf.predict_proba(new_pic)
 
 
@@ -245,7 +259,6 @@ def name_decider(name, prob_each_class, clf_class_name, thres):
     # if n < 3: return name right away
     # if max_prob >= thres also return name right away
     # if max_prob - 2nd_max >= 2/n also return name
-    # if max_prob < 2/n return unknown (inconclusive)
     # if more than 3 max pos return unknown
     # else return 3 possible name
 
