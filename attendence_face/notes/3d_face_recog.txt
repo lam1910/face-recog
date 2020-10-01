@@ -39,3 +39,10 @@ steps:
     - create and matrix of information
     - normalize that matrix
     - put through an classifier (preferably ensemble)
+
+important note:
+
+    - To create a 3d model of the face is extremely realised on lighting, exposure of the camera, and how good is the camera, the demo is on a laptop webcam.
+    - Also the 3d model with realised heavily on the angle of the face that are captured. It is recommended that the subject tilt the face a 5-15 degree angle instead of keeping the face straight to the cam
+    - A better solution would be to set up at least 2 cameras to capture more than 2 angle of the user. Create 2 face models than get the average of them
+    - One tiny issue it that the coordinate of the points, and subsequently the distance between two points, is depend on the size and the definition of the picture
