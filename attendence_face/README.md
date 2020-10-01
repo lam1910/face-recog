@@ -164,4 +164,4 @@ conda remove <-n name_of_the_virtualenv> opencv
     - Only print out the name of the person in the console, does not mark the face in live feed
     - Return anyone that does not pass the double check as unknown, but will not print out anything 
     - Only has a very small sample size, thus the parameters for model is mostly the default parameters
-    - Also with small sample size, the model may be overfitted or underfitted. Check the parameters carefully before use it
+    - Also with small sample size, the model may be overfitted or underfitted. Always check the parameters of the model carefully before use it
