@@ -53,9 +53,9 @@ class CheckIn:
             name_after_check = 'Unknown'
         return name_after_check
 
-    # In the face_recognize method, if there are only unknowns in the list 
+    # In the face_recognize method, if there are only unknowns in the list
     # of names, it will not print out anything.
-    def face_recognize(self, model=None):
+    def face_recognize(self, model=None, tol=0.45):
         video_capture = cv2.VideoCapture(0)
         if model is None:
             while True:
@@ -81,7 +81,7 @@ class CheckIn:
                 self.process_this_frame = not self.process_this_frame
                 for name in self.face_names:
                     if name != 'Unknown':
-                        print(name)
+                        print('Output name: {}'.format(name))
 
                 # Display the resulting image
                 cv2.imshow('Video', frame)
@@ -91,11 +91,11 @@ class CheckIn:
                     break
 
         else:
-            # one problem occurs when pass anything other than the model in 
-            # the code. put in try catch rather than do a check type in 
+            # one problem occurs when pass anything other than the model in
+            # the code. put in try catch rather than do a check type in
             # if else. Update: do to the natural of the get_face_name_by_model
             # method the try catch will be put there instead of here. That try
-            # catch will force any errors in to return 'Unknown', including 
+            # catch will force any errors in to return 'Unknown', including
             # ValueError, TypeError or IndexError
             while True:
                 # Grab a single frame of video
@@ -115,14 +115,14 @@ class CheckIn:
 
                     self.face_names = []
                     for face_encoding in self.face_encodings:
-                        self.face_names.append(self.get_face_name_by_model(face_encoding, model))
+                        self.face_names.append(self.get_face_name_by_model(face_encoding, model, tol))
 
                 self.process_this_frame = not self.process_this_frame
                 for name in self.face_names:
-                    # the frame that is not processed anything will be the one 
+                    # the frame that is not processed anything will be the one
                     # that forced to print out result
                     if name != 'Unknown' and not self.process_this_frame:
-                        print(name)
+                        print('Output name: {}'.format(name))
 
                 # Display the resulting image
                 cv2.imshow('Video', frame)

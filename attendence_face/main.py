@@ -13,6 +13,7 @@ from core.train_model import Trainer
 # read df
 test_dataset = LoadTrainset()
 # test_dataset.load()
+# test_dataset.save_to_file('dataset/test-2.xlsx')
 test_dataset.load_from_file('dataset/test-2.xlsx')
 
 # model
@@ -35,5 +36,5 @@ checks.__setknown_face_encodings__(test_dataset.encodings)
 checks.__setknown_face_names__(test_dataset.names)
 
 # actual run
-checks.face_recognize(new_clf)
+checks.face_recognize(new_clf, 0.45)
 # checks.face_recognize()
