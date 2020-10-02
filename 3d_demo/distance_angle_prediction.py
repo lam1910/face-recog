@@ -217,6 +217,8 @@ clf.fit(X, y)
 # -----------------------------------------------------------------------------------
 # get a new picture to recognize
 # define a video capture object
+# list of 5 nearest frames
+frames = []
 vid = cv2.VideoCapture(0)
 
 while True:
@@ -224,7 +226,11 @@ while True:
     # Capture the video frame
     # by frame
     ret, frame = vid.read()
-
+    if len(frames) < 5:
+        frames.append(frame)
+    elif len(frames) == 5:
+        to_rmv = frames.pop(0)
+        frames.append(frame)
     # Display the resulting frame
     cv2.imshow('frame', frame)
 
@@ -234,24 +240,32 @@ while True:
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-# After the loop release the cap object, convert the color channel of the last pic
-frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+# After the loop release the cap object, convert the color channel of the last 5 pics
+cvt_frames = [cv2.cvtColor(old_frame, cv2.COLOR_BGR2RGB) for old_frame in frames]
+# frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 vid.release()
 # Destroy all the windows
 cv2.destroyAllWindows()
 
-test_preds = fa.get_landmarks(frame)[-1]
-new_pic = calculate_face(test_preds)
-new_pic = np.array(new_pic)
-new_pic = pca.transform([new_pic])
+final_proba = [0] * len(clf.classes_)
+for new_frame in cvt_frames:
+    test_preds = fa.get_landmarks(new_frame)[-1]
+    new_pic = calculate_face(test_preds)
+    new_pic = np.array(new_pic)
+    new_pic = pca.transform([new_pic])
 
-# get test pic
-# test_img = io.imread('attendence_face/dataset/train_fol/Ma Chí Định/IMG_E0301.JPG')
-# test_preds = fa.get_landmarks(test_img)[-1]
-# test_pic = calculate_face(test_preds)
-# predict at the point return likelihood of each classes instead of get the class name
-# show out the probability of the picture is belong to each class
-clf.predict_proba(new_pic)
+    # get test pic
+    # test_img = io.imread('attendence_face/dataset/train_fol/Ma Chí Định/IMG_E0301.JPG')
+    # test_preds = fa.get_landmarks(test_img)[-1]
+    # test_pic = calculate_face(test_preds)
+    # predict at the point return likelihood of each classes instead of get the class name
+    # show out the probability of the picture is belong to each class
+    tmp = clf.predict_proba(new_pic).tolist()[0]
+    for i in range(len(tmp)):
+        if final_proba[i] < tmp[i]:
+            final_proba[i] = tmp[i]
+
+final_proba = np.array([final_proba])
 
 
 # after this write function to decide whether the highest probability class is good enough for a conclusion
@@ -306,7 +320,7 @@ def name_decider(name, prob_each_class, clf_class_name, thres):
     return tuple(clf_class_name[i] for i in max_pos)
 
 
-name_decider(clf.predict(new_pic)[0], clf.predict_proba(new_pic), clf.classes_, 0.4)
+name_decider(clf.predict(new_pic)[0], final_proba, clf.classes_, 0.6)
 # get another image to the src folder
 # convert back to BGR colour space due to the way opencv organize colour channels
 # cv2.imwrite('me3.jpg', cv2.cvtColor(frame, cv2.COLOR_RGB2BGR),
