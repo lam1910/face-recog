@@ -115,16 +115,17 @@ fa = face_alignment.FaceAlignment(face_alignment.LandmarksType._3D, device='cpu'
 
 paths, names = load('dataset/train_fol/')
 pred_type = collections.namedtuple('prediction_type', ['slice', 'color'])
-pred_types = {'face': pred_type(slice(0, 17), (0.682, 0.780, 0.909, 0.5)),
-              'eyebrow1': pred_type(slice(17, 22), (1.0, 0.498, 0.055, 0.4)),
-              'eyebrow2': pred_type(slice(22, 27), (1.0, 0.498, 0.055, 0.4)),
-              'nose': pred_type(slice(27, 31), (0.345, 0.239, 0.443, 0.4)),
-              'nostril': pred_type(slice(31, 36), (0.345, 0.239, 0.443, 0.4)),
-              'eye1': pred_type(slice(36, 42), (0.596, 0.875, 0.541, 0.3)),
-              'eye2': pred_type(slice(42, 48), (0.596, 0.875, 0.541, 0.3)),
-              'lips': pred_type(slice(48, 60), (0.596, 0.875, 0.541, 0.3)),
-              'teeth': pred_type(slice(60, 68), (0.596, 0.875, 0.541, 0.4))
-              }
+pred_types = {
+    'face': pred_type(slice(0, 17), (0.682, 0.780, 0.909, 0.5)),
+    'eyebrow1': pred_type(slice(17, 22), (1.0, 0.498, 0.055, 0.4)),
+    'eyebrow2': pred_type(slice(22, 27), (1.0, 0.498, 0.055, 0.4)),
+    'nose': pred_type(slice(27, 31), (0.345, 0.239, 0.443, 0.4)),
+    'nostril': pred_type(slice(31, 36), (0.345, 0.239, 0.443, 0.4)),
+    'eye1': pred_type(slice(36, 42), (0.596, 0.875, 0.541, 0.3)),
+    'eye2': pred_type(slice(42, 48), (0.596, 0.875, 0.541, 0.3)),
+    'lips': pred_type(slice(48, 60), (0.596, 0.875, 0.541, 0.3)),
+    'teeth': pred_type(slice(60, 68), (0.596, 0.875, 0.541, 0.4))
+}
 # -----------------------------------------------------------------------------------
 # manually select which one the library can construct correctly the face
 # preds = []
@@ -202,8 +203,15 @@ X = crit_3d.iloc[:, :-1].values
 y = crit_3d.iloc[:, -1].values
 
 # classifier
-# max_feature = None since having small number of features already
-clf = RandomForestClassifier(125, criterion='entropy', max_features='auto', warm_start=True)
+# max_feature = auto since having small number of features already
+# min_sample_split is set to be 1 because of the size of the demo dataset. Idea dataset size: 5 pictures for each person
+# be aware of the problem that some picture cannot correctly built the 3d model of the face, suggested that all the
+# background of the pictures used to built the model be simple or not very colourful
+# bootstrap set to false also to deal with small sample size (or rather a lot of pictures have to be removed as they
+# cannot detect the face), and subsequently class_weight set to balanced_subsample. ith bigger sample size, you might
+# want to set bootstrap back to true and class_weight to balanced to speed up the calculation
+clf = RandomForestClassifier(500, criterion='gini', min_samples_split=1/11, max_features='auto', bootstrap=False,
+                             class_weight='balanced_subsample', warm_start=False)
 clf.fit(X, y)
 
 # -----------------------------------------------------------------------------------
@@ -243,7 +251,6 @@ new_pic = pca.transform([new_pic])
 # test_pic = calculate_face(test_preds)
 # predict at the point return likelihood of each classes instead of get the class name
 # show out the probability of the picture is belong to each class
-# 1 of the realistic activation function is y = 0 if x < 1/n and 1 otherwise
 clf.predict_proba(new_pic)
 
 
@@ -299,5 +306,6 @@ def name_decider(name, prob_each_class, clf_class_name, thres):
     return tuple(clf_class_name[i] for i in max_pos)
 
 
+name_decider(clf.predict(new_pic)[0], clf.predict_proba(new_pic), clf.classes_, 0.4)
 # clf.predict([list(test_pic.values())])
 # -----------------------------------------------------------------------------------
