@@ -13,8 +13,8 @@ import cv2
 from sklearn.decomposition import PCA
 
 
-def calculate_distance(lists_of_landmarks, i, j):
-    return float(np.linalg.norm(lists_of_landmarks[i] - lists_of_landmarks[j], ord=2))
+def calculate_distance(lists_of_landmarks, start, stop):
+    return float(np.linalg.norm(lists_of_landmarks[start] - lists_of_landmarks[stop], ord=2))
 
 
 def calculate_jaw_angle(lists_of_landmarks):
