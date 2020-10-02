@@ -176,11 +176,11 @@ pred_types = {
 # final_label.append(names[idx_to_check])
 # -----------------------------------------------------------------------------------
 
-# id_to_append = [0, 2, 4, 5, 7, 8, 11, 12, 13, 14, 15]
+# id_to_append = [0, 1, 3, 5, 7, 8, 9, 12, 13, 14, 15, 16]
 # code to substitute the code segment that had been commented above. Essentially going to get identical result
 preds = []
 final_label = []
-for i in [0, 2, 4, 5, 7, 8, 11, 12, 13, 14, 15]:
+for i in [0, 1, 3, 5, 7, 8, 9, 12, 13, 14, 15, 16]:
     input_img = io.imread(paths[i])
     pred = fa.get_landmarks(input_img)[-1]
     preds.append(calculate_face(pred))
