@@ -307,5 +307,9 @@ def name_decider(name, prob_each_class, clf_class_name, thres):
 
 
 name_decider(clf.predict(new_pic)[0], clf.predict_proba(new_pic), clf.classes_, 0.4)
+# get another image to the src folder
+# convert back to BGR colour space due to the way opencv organize colour channels
+# cv2.imwrite('me3.jpg', cv2.cvtColor(frame, cv2.COLOR_RGB2BGR),
+#             [cv2.IMWRITE_JPEG_QUALITY, 100, cv2.IMWRITE_JPEG_OPTIMIZE, 1])
 # clf.predict([list(test_pic.values())])
 # -----------------------------------------------------------------------------------
