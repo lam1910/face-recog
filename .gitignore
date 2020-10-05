@@ -32,3 +32,7 @@ test-out.avi
 /3d_demo/MOVIE.mp4
 /3d_demo/MVI_0621.MOV
 /3d_demo/.ipynb_checkpoints/
+/Pytorch_Retinaface/widerface_evaluate/bbox.cpython-37m-x86_64-linux-gnu.so
+/Pytorch_Retinaface/widerface_evaluate/box_overlaps.c
+/Pytorch_Retinaface/weights/mobilenetV1X0.25_pretrain.tar
+/Pytorch_Retinaface/weights/Resnet50_Final.pth

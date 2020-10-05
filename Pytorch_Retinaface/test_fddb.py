@@ -18,8 +18,8 @@ parser.add_argument('-m', '--trained_model', default='./weights/mobilenet0.25_Fi
                     type=str, help='Trained state_dict file path to open')
 parser.add_argument('--network', default='mobile0.25', help='Backbone network mobile0.25 or resnet50')
 parser.add_argument('--save_folder', default='eval/', type=str, help='Dir to save results')
-parser.add_argument('--cpu', action="store_true", default=False, help='Use cpu inference')
-parser.add_argument('--dataset', default='FDDB', type=str, choices=['FDDB'], help='dataset')
+parser.add_argument('--cpu', action="store_true", default=True, help='Use cpu inference')
+parser.add_argument('--dataset_path', default='/media/lam/Data/Lam/wider_face/data/fddb/', type=str, help='dataset')
 parser.add_argument('--confidence_threshold', default=0.02, type=float, help='confidence_threshold')
 parser.add_argument('--top_k', default=5000, type=int, help='top_k')
 parser.add_argument('--nms_threshold', default=0.4, type=float, help='nms_threshold')
@@ -86,11 +86,11 @@ if __name__ == '__main__':
     # save file
     if not os.path.exists(args.save_folder):
         os.makedirs(args.save_folder)
-    fw = open(os.path.join(args.save_folder, args.dataset + '_dets.txt'), 'w')
+    fw = open(os.path.join(args.save_folder, 'fddb' + '_dets.txt'), 'w')
 
     # testing dataset
-    testset_folder = os.path.join('data', args.dataset, 'images/')
-    testset_list = os.path.join('data', args.dataset, 'img_list.txt')
+    testset_folder = os.path.join(args.dataset_path, 'images/')
+    testset_list = os.path.join(args.dataset_path, 'img_list.txt')
     with open(testset_list, 'r') as fr:
         test_dataset = fr.read().split()
     num_images = len(test_dataset)
@@ -164,7 +164,7 @@ if __name__ == '__main__':
         _t['misc'].toc()
 
         # save dets
-        if args.dataset == "FDDB":
+        if "fddb/" in args.dataset_path:
             fw.write('{:s}\n'.format(img_name))
             fw.write('{:.1f}\n'.format(dets.shape[0]))
             for k in range(dets.shape[0]):
@@ -199,9 +199,9 @@ if __name__ == '__main__':
                 cv2.circle(img_raw, (b[11], b[12]), 1, (0, 255, 0), 4)
                 cv2.circle(img_raw, (b[13], b[14]), 1, (255, 0, 0), 4)
             # save image
-            if not os.path.exists("./results/"):
-                os.makedirs("./results/")
-            name = "./results/" + str(i) + ".jpg"
+            if not os.path.exists("/media/lam/Data/Lam/wider_face/data/results/fddb/"):
+                os.makedirs("/media/lam/Data/Lam/wider_face/data/results/fddb/")
+            name = "/media/lam/Data/Lam/wider_face/data/results/fddb/" + str(i) + ".jpg"
             cv2.imwrite(name, img_raw)
 
     fw.close()

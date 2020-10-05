@@ -14,13 +14,13 @@ from utils.timer import Timer
 
 
 parser = argparse.ArgumentParser(description='Retinaface')
-parser.add_argument('-m', '--trained_model', default='./weights/Resnet50_Final.pth',
+parser.add_argument('-m', '--trained_model', default='./weights/mobilenet0.25_Final.pth',
                     type=str, help='Trained state_dict file path to open')
-parser.add_argument('--network', default='resnet50', help='Backbone network mobile0.25 or resnet50')
+parser.add_argument('--network', default='mobile0.25', help='Backbone network mobile0.25 or resnet50')
 parser.add_argument('--origin_size', default=True, type=str, help='Whether use origin image size to evaluate')
 parser.add_argument('--save_folder', default='./widerface_evaluate/widerface_txt/', type=str, help='Dir to save txt results')
-parser.add_argument('--cpu', action="store_true", default=False, help='Use cpu inference')
-parser.add_argument('--dataset_folder', default='./data/widerface/val/images/', type=str, help='dataset path')
+parser.add_argument('--cpu', action="store_true", default=True, help='Use cpu inference')
+parser.add_argument('--dataset_folder', default='/media/lam/Data/Lam/wider_face/data/val/images/', type=str, help='dataset path')
 parser.add_argument('--confidence_threshold', default=0.02, type=float, help='confidence_threshold')
 parser.add_argument('--top_k', default=5000, type=int, help='top_k')
 parser.add_argument('--nms_threshold', default=0.4, type=float, help='nms_threshold')
@@ -90,6 +90,9 @@ if __name__ == '__main__':
 
     with open(testset_list, 'r') as fr:
         test_dataset = fr.read().split()
+
+    while test_dataset.count('#') != 0:
+        test_dataset.remove('#')
     num_images = len(test_dataset)
 
     _t = {'forward_pass': Timer(), 'misc': Timer()}
@@ -98,6 +101,8 @@ if __name__ == '__main__':
     for i, img_name in enumerate(test_dataset):
         image_path = testset_folder + img_name
         img_raw = cv2.imread(image_path, cv2.IMREAD_COLOR)
+        if img_raw is None:
+            continue
         img = np.float32(img_raw)
 
         # testing scale
@@ -212,8 +217,8 @@ if __name__ == '__main__':
                 cv2.circle(img_raw, (b[11], b[12]), 1, (0, 255, 0), 4)
                 cv2.circle(img_raw, (b[13], b[14]), 1, (255, 0, 0), 4)
             # save image
-            if not os.path.exists("./results/"):
-                os.makedirs("./results/")
-            name = "./results/" + str(i) + ".jpg"
+            if not os.path.exists("/media/lam/Data/Lam/wider_face/data/results/wider_face/"):
+                os.makedirs("/media/lam/Data/Lam/wider_face/data/results/wider_face/")
+            name = "/media/lam/Data/Lam/wider_face/data/results/wider_face/" + str(i) + ".jpg"
             cv2.imwrite(name, img_raw)
 

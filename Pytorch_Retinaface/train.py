@@ -13,8 +13,12 @@ import datetime
 import math
 from models.retinaface import RetinaFace
 
+
+# only possible with gpu
+# consider buying or leasing gpu if you are planning to train
+# for small dataset could train with cpu but require some adjustment
 parser = argparse.ArgumentParser(description='Retinaface Training')
-parser.add_argument('--training_dataset', default='./data/widerface/train/label.txt', help='Training dataset directory')
+parser.add_argument('--training_dataset', default='/media/lam/Data/Lam/wider_face/data/train/label.txt', help='Training dataset directory')
 parser.add_argument('--network', default='mobile0.25', help='Backbone network mobile0.25 or resnet50')
 parser.add_argument('--num_workers', default=4, type=int, help='Number of workers used in dataloading')
 parser.add_argument('--lr', '--learning-rate', default=1e-3, type=float, help='initial learning rate')
