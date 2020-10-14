@@ -19,7 +19,7 @@ parser.add_argument('-m', '--trained_model', default='./weights/mobilenet0.25_Fi
 parser.add_argument('--network', default='mobile0.25', help='Backbone network mobile0.25 or resnet50')
 parser.add_argument('--origin_size', default=True, type=str, help='Whether use origin image size to evaluate')
 parser.add_argument('--save_folder', default='./widerface_evaluate/widerface_txt/', type=str, help='Dir to save txt results')
-parser.add_argument('--cpu', action="store_true", default=True, help='Use cpu inference')
+parser.add_argument('--cpu', action="store_true", default=False, help='Use cpu inference')
 parser.add_argument('--dataset_folder', default='/media/lam/Data/Lam/wider_face/data/val/images/', type=str, help='dataset path')
 parser.add_argument('--confidence_threshold', default=0.02, type=float, help='confidence_threshold')
 parser.add_argument('--top_k', default=5000, type=int, help='top_k')
@@ -27,7 +27,11 @@ parser.add_argument('--nms_threshold', default=0.4, type=float, help='nms_thresh
 parser.add_argument('--keep_top_k', default=750, type=int, help='keep_top_k')
 parser.add_argument('-s', '--save_image', action="store_true", default=False, help='show detection results')
 parser.add_argument('--vis_thres', default=0.5, type=float, help='visualization_threshold')
-args = parser.parse_args()
+#args = parser.parse_args()
+
+new_argv = ['--save_folder', './widerface_evaluate/real_face/', '--cpu',
+            '--dataset_folder', '/home/lam/face-recog/dataset/wider_face_style_train/images/', '-s']
+args = parser.parse_args(new_argv)
 
 
 def check_keys(model, pretrained_state_dict):
@@ -96,6 +100,10 @@ if __name__ == '__main__':
     num_images = len(test_dataset)
 
     _t = {'forward_pass': Timer(), 'misc': Timer()}
+
+    for i, img_name in enumerate(test_dataset):
+        print(str(i) + ': ' + testset_folder + img_name)
+        img_raw = cv2.imread(testset_folder + img_name, cv2.IMREAD_COLOR)
 
     # testing begin
     for i, img_name in enumerate(test_dataset):
@@ -176,7 +184,7 @@ if __name__ == '__main__':
         _t['misc'].toc()
 
         # --------------------------------------------------------------------
-        save_name = args.save_folder + img_name[:-4] + ".txt"
+        save_name = args.save_folder + img_name.split('.')[0] + ".txt"
         dirname = os.path.dirname(save_name)
         if not os.path.isdir(dirname):
             os.makedirs(dirname)
@@ -191,8 +199,12 @@ if __name__ == '__main__':
                 y = int(box[1])
                 w = int(box[2]) - int(box[0])
                 h = int(box[3]) - int(box[1])
+                # added lanmarks
+                x1, y1, x2, y2, x3, y3, x4, y4, x5, y5 = box[5:]
                 confidence = str(box[4])
-                line = str(x) + " " + str(y) + " " + str(w) + " " + str(h) + " " + confidence + " \n"
+                line = str(x) + " " + str(y) + " " + str(w) + " " + str(h) + " " + str(x1) + " " + str(y1) + " " + \
+                       str(x2) + " " + str(y2) + " " + str(x3) + " " + str(y3) + " " + str(x4) + " " + str(y4) + " " + \
+                       str(x5) + " " + str(y5) + " " + confidence + " \n"
                 fd.write(line)
 
         print('im_detect: {:d}/{:d} forward_pass_time: {:.4f}s misc: {:.4f}s'.format(i + 1, num_images, _t['forward_pass'].average_time, _t['misc'].average_time))
@@ -217,8 +229,8 @@ if __name__ == '__main__':
                 cv2.circle(img_raw, (b[11], b[12]), 1, (0, 255, 0), 4)
                 cv2.circle(img_raw, (b[13], b[14]), 1, (255, 0, 0), 4)
             # save image
-            if not os.path.exists("/media/lam/Data/Lam/wider_face/data/results/wider_face/"):
-                os.makedirs("/media/lam/Data/Lam/wider_face/data/results/wider_face/")
-            name = "/media/lam/Data/Lam/wider_face/data/results/wider_face/" + str(i) + ".jpg"
+            if not os.path.exists("/media/lam/Data/Lam/wider_face/data/results/real_face/"):
+                os.makedirs("/media/lam/Data/Lam/wider_face/data/results/real_face/")
+            name = "/media/lam/Data/Lam/wider_face/data/results/real_face/" + str(i) + ".jpg"
             cv2.imwrite(name, img_raw)
 
