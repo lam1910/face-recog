@@ -10,7 +10,7 @@ Created on Tue Sep  1 16:55:21 2020
 # Adding ANN to method
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
-from utilis.model_io import load_bin, export_bin
+from utils.model_io import load_bin, export_bin
 import warnings
 import keras
 from keras.models import Sequential

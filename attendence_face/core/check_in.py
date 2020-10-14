@@ -8,8 +8,8 @@ Created on Tue Sep  1 16:55:21 2020
 import face_recognition
 import cv2
 import numpy as np
-from utilis.check_back_face import double_check_result
-from utilis.convert_to_no_accent import convert
+from utils.check_back_face import double_check_result
+from utils.convert_to_no_accent import convert
 
 
 class CheckIn:

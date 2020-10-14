@@ -15,7 +15,7 @@ dataset/unknown_faces/IMG_2371.JPG
 dataset/unknown_faces/IMG_9563.JPG
 /attendence_face/dataset/train_fol
 /core/
-/utilis/
+/utils/
 /main.py
 .idea
 cv2
