@@ -1,5 +1,8 @@
 def normalize(list_to_norm, start_range, stop_range):
-    length = abs(stop_range - start_range)
+    if start_range > stop_range:
+        print('Start point of normalized range is currently bigger then stop point. Attempt to swap them.')
+        start_range, stop_range = stop_range, start_range
+    length = stop_range - start_range
     min_num = min(list_to_norm)
     max_num = max(list_to_norm)
     normalized = []
