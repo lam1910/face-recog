@@ -41,11 +41,11 @@ class CheckIn:
 
         return name
 
-    def get_face_name_by_model(self, face_enc, clf):
+    def get_face_name_by_model(self, face_enc, clf, threshold):
         try:
             name = clf.predict([face_enc])[0]
             index_of_name = self.known_face_names.index(name)
-            name_after_check = double_check_result(name, self.known_face_encodings[index_of_name], face_enc)
+            name_after_check = double_check_result(name, self.known_face_encodings[index_of_name], face_enc, threshold)
         # every errors that can be caught now included Errors that does not 
         # related to data structure, algo or type of param. Futhermore, those 
         # errors should be pretty rare so throw out the unknown tag for now.
