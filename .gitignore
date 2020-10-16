@@ -36,3 +36,8 @@ test-out.avi
 /Pytorch_Retinaface/widerface_evaluate/box_overlaps.c
 /Pytorch_Retinaface/weights/mobilenetV1X0.25_pretrain.tar
 /Pytorch_Retinaface/weights/Resnet50_Final.pth
+/data/
+/layers/
+/models/
+/eval/
+/weights/
