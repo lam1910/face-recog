@@ -123,7 +123,7 @@ def check_keys(model, pretrained_state_dict):
 
 
 def remove_prefix(state_dict, prefix):
-    ''' Old style model is stored with all names of parameters sharing common prefix 'module.' '''
+    """ Old style model is stored with all names of parameters sharing common prefix 'module.' """
     print('remove prefix \'{}\''.format(prefix))
     f = lambda x: x.split(prefix, 1)[-1] if x.startswith(prefix) else x
     return {f(key): value for key, value in state_dict.items()}
@@ -148,7 +148,7 @@ def load_model(model, pretrained_path, load_to_cpu):
 torch.set_grad_enabled(False)
 
 cfg = cfg_mnet
-net = RetinaFace(cfg=cfg, phase = 'test')
+net = RetinaFace(cfg=cfg, phase='test')
 net = load_model(net, 'Pytorch_Retinaface/weights/mobilenet0.25_Final.pth', True)
 net.eval()
 cudnn.benchmark = True
