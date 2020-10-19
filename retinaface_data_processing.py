@@ -237,36 +237,42 @@ while True:
         # landms = landms[:args.keep_top_k, :]
 
         # added lanmarks
-        x1, y1 = landms[:, 0:2][0]
-        x2, y2 = landms[:, 2:4][0]
-        x3, y3 = landms[:, 4:6][0]
-        x4, y4 = landms[:, 6:8][0]
-        x5, y5 = landms[:, 8:10][0]
+        try:
+            x1, y1 = landms[:, 0:2][0]
+            x2, y2 = landms[:, 2:4][0]
+            x3, y3 = landms[:, 4:6][0]
+            x4, y4 = landms[:, 6:8][0]
+            x5, y5 = landms[:, 8:10][0]
 
-        conf = dets[0, -1]
+            person = [(x1, y1), (x2, y2), (x3, y3), (x4, y4), (x5, y5)]
+            person_stats = []
+            distances = []
+            vectors = []
+            angles = []
+            for i in range(len(person)):
+                for j in range(i + 1, len(person)):
+                    distance = calculate_distance(person[i], person[j])
+                    distances.append(distance)
+                    vectors.append(np.asarray(person[j]) - np.asarray(person[i]))
 
-        person = [(x1, y1), (x2, y2), (x3, y3), (x4, y4), (x5, y5)]
-        person_stats = []
-        distances = []
-        vectors = []
-        angles = []
-        for i in range(len(person)):
-            for j in range(i + 1, len(person)):
-                distance = calculate_distance(person[i], person[j])
-                distances.append(distance)
-                vectors.append(np.asarray(person[j]) - np.asarray(person[i]))
+            for i in range(len(vectors)):
+                for j in range(i + 1, len(vectors)):
+                    angle = calculate_angle(vectors[i], vectors[j])
+                    angles.append(angle)
 
-        for i in range(len(vectors)):
-            for j in range(i + 1, len(vectors)):
-                angle = calculate_angle(vectors[i], vectors[j])
-                angles.append(angle)
+            # compound distances and angles
+            distances = normalize(distances, -1, 1)
+            person_stat = distances + angles
 
-        # compound distances and angles
-        distances = normalize(distances, -1, 1)
-        person_stat = distances + angles
-
-        face_names = clf.predict([person_stat])
-        face_prob = clf.predict_proba([person_stat]).max()
+            face_names = clf.predict([person_stat])
+            face_prob = clf.predict_proba([person_stat]).max()
+        except IndexError:
+            # Return a list to match how we call below
+            face_names = ['Unknown']
+            # although it is for sure not a face we can recognize from the db
+            # (because the system cannot detect any faces to begin with) we will treat it as probability 0 to match the
+            # activation function below
+            face_prob = 0.0
 
     process_this_frame = not process_this_frame
     for name in face_names:
@@ -276,9 +282,11 @@ while True:
         if face_prob < 0.55:
             name = 'Unknown'
 
-        if not process_this_frame:
-            print(f'Output name: {name} (was {old_name}) with confidence of face {conf} and name confidence '
-                  f'of {face_prob}')
+        if not process_this_frame and face_prob != 0.0:
+            print(f'Output name: {name} (was {old_name}) name confidence of {face_prob}')
+        elif face_prob == 0.0:
+            print('Something wrong with the input. Most likely a frame without a face detected in it. If this problem '
+                  'continues, make sure the input feed had a face in it')
 
     # Display the resulting image
     cv2.imshow('Video', frame)
