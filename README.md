@@ -17,3 +17,6 @@
     pip install -r requirements.txt
     python main.py
     ```
+   
+4. There is an alternative method of using pytorch and torchvision on the script retinaface_data_processing. The script utilised Adaboost instead of random forest + a simple activation function.
+Note that this activation function does not fully eliminate mislabel inside people case, it is designed to limit the case of mislabel outside person as one that is in the system as much as possible
