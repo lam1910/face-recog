@@ -7,8 +7,9 @@ Created on Tue Sep  1 16:55:21 2020
 
 # attempt to having multiple picture for 1 person
 # Train multiple images per person
-# Adding ANN to method
-from sklearn.ensemble import RandomForestClassifier
+# Adding ANN to method (deprecated) (removed)
+# adding adaboost to method
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.svm import SVC
 from utils.model_io import load_bin, export_bin
 import warnings
@@ -48,7 +49,7 @@ class Trainer:
     def train_model(self, wr_out=False, file_name=None,
                     svc_kernel='rbf', svc_gamma='scale', svc_decision_function_shape='ovr',
                     n_estimators=100, rf_crit='gini', max_feat='auto',
-                    warm_start=False):
+                    warm_start=False, learning_rate=0.1):
         # if user choose the svm model
         if self.method == 'svc':
             try:
@@ -78,6 +79,20 @@ class Trainer:
                                              criterion='gini',
                                              max_features='auto',
                                              warm_start=False)
+                clf.fit(self.__X, self.__label)
+            finally:
+                final_res = self.write_out_ctrl(wr_out, clf, file_name)
+                if final_res is None:
+                    print('You have chosen not to write the model out. Return the model now')
+                    return clf
+        # if method chose was adaboost
+        elif self.method == 'ada'or self.method == 'adab':
+            try:
+                clf = AdaBoostClassifier(n_estimators=n_estimators, learning_rate=learning_rate)
+                clf.fit(self.__X, self.__label)
+            except ValueError:
+                print('Arguments for AdaBoost is not acceptable for sklearn. Construct with default value')
+                clf = AdaBoostClassifier(n_estimators=50, learning_rate=0.1)
                 clf.fit(self.__X, self.__label)
             finally:
                 final_res = self.write_out_ctrl(wr_out, clf, file_name)
