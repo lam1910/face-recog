@@ -1,4 +1,4 @@
-from utils_vector_function import calculate_distance, calculate_angle, calculate_length
+from utils_vector_function import calculate_distance, calculate_angle
 from normalize_list import normalize
 import numpy as np
 import os
@@ -266,14 +266,19 @@ while True:
         person_stat = distances + angles
 
         face_names = clf.predict([person_stat])
+        face_prob = clf.predict_proba([person_stat]).max()
 
     process_this_frame = not process_this_frame
     for name in face_names:
         # the frame that is not processed anything will be the one
         # that forced to print out result
-        if name != 'Unknown' and not process_this_frame:
-            print(f'Output name: {name} with confidence of face {conf} and name confidence '
-                  f'of {clf.predict_proba([person_stat]).max()}')
+        old_name = name
+        if face_prob < 0.55:
+            name = 'Unknown'
+
+        if not process_this_frame:
+            print(f'Output name: {name} (was {old_name}) with confidence of face {conf} and name confidence '
+                  f'of {face_prob}')
 
     # Display the resulting image
     cv2.imshow('Video', frame)
