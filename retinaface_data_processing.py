@@ -105,6 +105,7 @@ retinaface_people.to_excel('/home/lam/face-recog/dataset/wider_face_style_train/
 X = retinaface_people.iloc[:, :-1].values
 y = retinaface_people.iloc[:, -1].values
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import AdaBoostClassifier
 import cv2
 
 
@@ -155,6 +156,7 @@ device = torch.device("cpu")
 net = net.to(device)
 
 clf = RandomForestClassifier(n_estimators=100, criterion='gini', max_features='sqrt', warm_start=False)
+clf = AdaBoostClassifier(n_estimators=50, learning_rate=0.1)
 
 clf.fit(X, y)
 origin_size = True
@@ -234,22 +236,14 @@ while True:
         # dets = dets[:args.keep_top_k, :]
         # landms = landms[:args.keep_top_k, :]
 
-        dets = np.concatenate((dets, landms), axis=1)
-
-        # --------------------------------------------------------------------
-        bboxs = dets
-        box = bboxs[0]
-        x = int(box[0])
-        y = int(box[1])
-        w = int(box[2]) - int(box[0])
-        h = int(box[3]) - int(box[1])
         # added lanmarks
-        x1, y1 = box[4:6]
-        x2, y2 = box[6:8]
-        x3, y3 = box[8:10]
-        x4, y4 = box[10:12]
-        x5, y5 = box[12:14]
-        confidence = str(box[4])
+        x1, y1 = landms[:, 0:2][0]
+        x2, y2 = landms[:, 2:4][0]
+        x3, y3 = landms[:, 4:6][0]
+        x4, y4 = landms[:, 6:8][0]
+        x5, y5 = landms[:, 8:10][0]
+
+        conf = dets[0, -1]
 
         person = [(x1, y1), (x2, y2), (x3, y3), (x4, y4), (x5, y5)]
         person_stats = []
@@ -278,7 +272,8 @@ while True:
         # the frame that is not processed anything will be the one
         # that forced to print out result
         if name != 'Unknown' and not process_this_frame:
-            print('Output name: {}'.format(name))
+            print(f'Output name: {name} with confidence of face {conf} and name confidence '
+                  f'of {clf.predict_proba([person_stat]).max()}')
 
     # Display the resulting image
     cv2.imshow('Video', frame)
