@@ -290,7 +290,10 @@ while True:
             name = 'Unknown'
 
         if not process_this_frame and face_prob != 0.0:
-            print(f'Output name: {name} name confidence of {face_prob}')
+            if name != 'Unknown':
+                print(f'Output name: {name} name confidence of {face_prob}')
+            else:
+                print(f'Output name: {name} (was {old_name}) name confidence of {face_prob}')
         elif face_prob == 0.0:
             print('Something wrong with the input. Most likely a frame without a face detected in it. If this problem '
                   'continues, make sure the input feed had a face in it')
