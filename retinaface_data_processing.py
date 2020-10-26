@@ -95,8 +95,13 @@ for person in person_crucial_points:
     angles = []
     vectors = []
 
+from sklearn.decomposition import PCA
+pca = PCA(n_components=5, svd_solver='auto')
+person_stats = pca.fit_transform(person_stats)
+explained_variance = pca.explained_variance_ratio_
 retinaface_people = pd.DataFrame(person_stats)
 retinaface_people['Label'] = names
+
 
 retinaface_people.to_excel('/home/lam/face-recog/dataset/wider_face_style_train/retinaface_real_people.xlsx',
                            index=False)
@@ -263,9 +268,11 @@ while True:
             # compound distances and angles
             distances = normalize(distances, -1, 1)
             person_stat = distances + angles
+            person_stat = pca.transform([person_stat])
+            #person_stat = [person_stat]
 
-            face_names = clf.predict([person_stat])
-            face_prob = clf.predict_proba([person_stat]).max()
+            face_names = clf.predict(person_stat)
+            face_prob = clf.predict_proba(person_stat).max()
         except IndexError:
             # Return a list to match how we call below
             face_names = ['Unknown']
@@ -279,11 +286,11 @@ while True:
         # the frame that is not processed anything will be the one
         # that forced to print out result
         old_name = name
-        if face_prob < 0.55:
+        if face_prob < 0.6:
             name = 'Unknown'
 
         if not process_this_frame and face_prob != 0.0:
-            print(f'Output name: {name} (was {old_name}) name confidence of {face_prob}')
+            print(f'Output name: {name} name confidence of {face_prob}')
         elif face_prob == 0.0:
             print('Something wrong with the input. Most likely a frame without a face detected in it. If this problem '
                   'continues, make sure the input feed had a face in it')
