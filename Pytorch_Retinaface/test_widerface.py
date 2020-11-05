@@ -29,7 +29,8 @@ parser.add_argument('-s', '--save_image', action="store_true", default=False, he
 parser.add_argument('--vis_thres', default=0.5, type=float, help='visualization_threshold')
 #args = parser.parse_args()
 
-new_argv = ['--save_folder', './widerface_evaluate/real_face/', '--cpu',
+new_argv = ['-m', '/home/lam/face-recog/weights/Resnet50_Final.pth', '--network', 'resnet50',
+            '--save_folder', './widerface_evaluate/real_face/', '--cpu',
             '--dataset_folder', '/home/lam/face-recog/dataset/wider_face_style_train/images/', '-s']
 args = parser.parse_args(new_argv)
 
