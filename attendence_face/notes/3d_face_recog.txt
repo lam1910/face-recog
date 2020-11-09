@@ -7,7 +7,7 @@ methods:
 classification criteria: (depend on lighting) + (not accurate enough)
 
     - jaw height (point 0-4)
-    - 1/2 jaw circumference (5-9)
+    - 1/2 jaw circumference (4-8)
     - forehead width (distance between 2 outer points of two eyebrows) (point 17, 26)
     - distance between 2 eyebrows (distance between 2 inner points of two eyebrows) (point 21, 22)
     - average width of eyes (point 36, 39 and point 42, 45)
@@ -16,14 +16,13 @@ classification criteria: (depend on lighting) + (not accurate enough)
     - nose length (point 27, 30)
     - nose width (nostril) (point 31, 35)
     - distance between upper lip and nostril (point 33, 51)
-    - mouth width (point 48, 54)
     - upper lip height avg(point 50, 61 and point 52, 63)
     - lower lip height avg(point 56, 65 and point 58, 67)
-    - distance between lower lip to chin (point 57, 9)
-    - lower jawbone angle (00:5 and 5:10)
-    - chin angle (point 8, 9 and point 9, 10)
+    - distance between lower lip to chin (point 57, 8)
+    - lower jawbone angle (4:8 and 8:12)
+    - chin angle (point 7, 8 and point 8, 9)
     - nose angle (point 27, 30 and point 30, 33)
-    - jawbone angle (point 0, 1 and point 16, 17)
+    - jawbone angle (point 0, 3 and point 13, 16)
 
     - new criteria: 4 angles above + distance between any 2 of 68 points got from modelling + average width of eyes +
     average height of eyes + average distance between eyes and brows + upper lip height + lower lip height

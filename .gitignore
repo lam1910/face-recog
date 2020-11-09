@@ -41,3 +41,4 @@ test-out.avi
 /models/
 /eval/
 /weights/
+/numpy+mkl/

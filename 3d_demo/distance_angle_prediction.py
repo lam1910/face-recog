@@ -5,12 +5,26 @@ import face_alignment
 import collections
 from skimage import io
 import numpy as np
-from sklearn.preprocessing import normalize
 import os
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+# for small dataset, you might want to use decision tree
+from sklearn.tree import DecisionTreeClassifier
 import cv2
 from sklearn.decomposition import PCA
+
+
+def normalize(list_to_norm, start_range, stop_range):
+    if start_range > stop_range:
+        print('Start point of normalized range is currently bigger then stop point. Attempt to swap them.')
+        start_range, stop_range = stop_range, start_range
+    length = stop_range - start_range
+    min_num = min(list_to_norm)
+    max_num = max(list_to_norm)
+    normalized = []
+    for num in list_to_norm:
+        normalized.append(length * ((num - min_num) / (max_num - min_num)) + start_range)
+    return normalized
 
 
 def calculate_distance(lists_of_landmarks, start, stop):
@@ -18,8 +32,8 @@ def calculate_distance(lists_of_landmarks, start, stop):
 
 
 def calculate_jaw_angle(lists_of_landmarks):
-    jaw_h = lists_of_landmarks[0] - lists_of_landmarks[4]
-    jaw_w = lists_of_landmarks[9] - lists_of_landmarks[5]
+    jaw_h = lists_of_landmarks[0] - lists_of_landmarks[3]
+    jaw_w = lists_of_landmarks[13] - lists_of_landmarks[16]
     return float(np.dot(jaw_h, jaw_w) / (np.linalg.norm(jaw_h) * np.linalg.norm(jaw_w)))
 
 
@@ -58,8 +72,8 @@ def calculate_lower_lip_height(lists_of_landmarks):
 
 
 def calculate_chin_angle(lists_of_landmarks):
-    chin_1 = lists_of_landmarks[8] - lists_of_landmarks[9]
-    chin_2 = lists_of_landmarks[9] - lists_of_landmarks[10]
+    chin_1 = lists_of_landmarks[7] - lists_of_landmarks[8]
+    chin_2 = lists_of_landmarks[8] - lists_of_landmarks[9]
     return float(np.dot(chin_1, chin_2) / (np.linalg.norm(chin_1) * np.linalg.norm(chin_2)))
 
 
@@ -75,21 +89,22 @@ def calculate_jawbone_angle(lists_of_landmarks):
     return float(np.dot(jawbone_1, jawbone_2) / (np.linalg.norm(jawbone_1) * np.linalg.norm(jawbone_2)))
 
 
-def calculate_face(lists_of_landmarks):
+def calculate_face(lists_of_landmarks, list_of_focused_points):
     number_cal = []
-    for i in range(len(lists_of_landmarks)):
-        for j in range(i, len(lists_of_landmarks)):
-            number_cal.append(calculate_distance(lists_of_landmarks, i, j))
+    for i in range(len(list_of_focused_points)):
+        for j in range(i, len(list_of_focused_points)):
+            number_cal.append(calculate_distance(lists_of_landmarks, list_of_focused_points[i], list_of_focused_points[j]))
 
     special_distance = [
         calculate_eye_width(lists_of_landmarks), calculate_eye_height(lists_of_landmarks),
         calculate_eye_brow_distance(lists_of_landmarks), calculate_upper_lip_height(lists_of_landmarks),
-        calculate_lower_lip_height(lists_of_landmarks), calculate_jaw_angle(lists_of_landmarks),
-        calculate_chin_angle(lists_of_landmarks), calculate_nose_angle(lists_of_landmarks),
-        calculate_jawbone_angle(lists_of_landmarks)
+        calculate_lower_lip_height(lists_of_landmarks)
     ]
-    number_cal = number_cal + special_distance
-    return normalize([number_cal]).tolist()[0]
+    special_distance = normalize(special_distance, 0, 1)
+    special_angle = [calculate_jaw_angle(lists_of_landmarks), calculate_chin_angle(lists_of_landmarks),
+                     calculate_nose_angle(lists_of_landmarks), calculate_jawbone_angle(lists_of_landmarks)]
+    number_cal = normalize(number_cal, 0, 1) + special_distance + special_angle
+    return number_cal
 
 
 def load(trainset_path):
@@ -98,22 +113,28 @@ def load(trainset_path):
     names = []
     # Loop through each person in the training directory
     for person in train_dir:
-        pix = os.listdir(trainset_path + person)
-        # Loop through each training image for the current person
-        for person_img in pix:
-            try:
-                paths.append(trainset_path + person + '/' + person_img)
-                names.append(person)
-            except IndexError:
-                print('Cannot locate face. Skip this Image: ' + person + "/" + person_img)
-
+        try:
+            pix = os.listdir(trainset_path + person)
+            # Loop through each training image for the current person
+            for person_img in pix:
+                try:
+                    paths.append(trainset_path + person + '/' + person_img)
+                    if '_' in person:
+                        real_person = person.replace('_', ' ')
+                    else:
+                        real_person = person
+                    names.append(real_person)
+                except IndexError:
+                    print('Cannot locate face. Skip this Image: ' + person + "/" + person_img)
+        except NotADirectoryError:
+            continue
     return paths, names
 
 
 # Run the 3D face alignment on a test image, without CUDA.
 fa = face_alignment.FaceAlignment(face_alignment.LandmarksType._3D, device='cpu', flip_input=True)
 
-paths, names = load('dataset/train_fol/')
+paths, names = load('dataset/wider_face_style_train/images/')
 pred_type = collections.namedtuple('prediction_type', ['slice', 'color'])
 pred_types = {
     'face': pred_type(slice(0, 17), (0.682, 0.780, 0.909, 0.5)),
@@ -126,6 +147,8 @@ pred_types = {
     'lips': pred_type(slice(48, 60), (0.596, 0.875, 0.541, 0.3)),
     'teeth': pred_type(slice(60, 68), (0.596, 0.875, 0.541, 0.4))
 }
+selected_points = [0, 3, 4, 7, 8, 9, 12, 13, 16, 17, 19, 21, 22, 24, 26, 27, 28, 29, 30, 31, 33, 35, 36, 37, 38, 39,
+                   40, 41, 42, 43, 44, 45, 46, 47, 50, 51, 52, 56, 57, 58, 61, 63, 67]
 # -----------------------------------------------------------------------------------
 # manually select which one the library can construct correctly the face
 # preds = []
@@ -176,28 +199,29 @@ pred_types = {
 # final_label.append(names[idx_to_check])
 # -----------------------------------------------------------------------------------
 
-# id_to_append = [0, 1, 3, 5, 7, 8, 9, 12, 13, 14, 15, 16]
+id_to_append = [0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19]
 # code to substitute the code segment that had been commented above. Essentially going to get identical result
 preds = []
 final_label = []
-for i in [0, 1, 3, 5, 7, 8, 9, 12, 13, 14, 15, 16]:
+for i in id_to_append:
     input_img = io.imread(paths[i])
     pred = fa.get_landmarks(input_img)[-1]
-    preds.append(calculate_face(pred))
+    preds.append(calculate_face(pred, selected_points))
     final_label.append(names[i])
 
 # applying pca
-pca = PCA(n_components=5, svd_solver='auto')
-preds = pca.fit_transform(preds)
+#pca = PCA(n_components=16, svd_solver='auto')
+#preds = pca.fit_transform(preds)
 
-# final_table = pd.DataFrame(preds)
-# final_table['Label'] = final_label
+final_table = pd.DataFrame(preds)
+final_table['Label'] = final_label
 # # checkpoint at id = 8
 # with pd.ExcelWriter('dataset/test-3d.xlsx', 'openpyxl', mode='a') as wr:
 #     final_table.to_excel(wr, index=False)
 
 # get trainset
-crit_3d = pd.read_excel('dataset/test-3d.xlsx')
+# crit_3d = pd.read_excel('dataset/test-3d.xlsx')
+crit_3d = final_table.copy()
 
 X = crit_3d.iloc[:, :-1].values
 y = crit_3d.iloc[:, -1].values
@@ -210,8 +234,27 @@ y = crit_3d.iloc[:, -1].values
 # bootstrap set to false also to deal with small sample size (or rather a lot of pictures have to be removed as they
 # cannot detect the face), and subsequently class_weight set to balanced_subsample. ith bigger sample size, you might
 # want to set bootstrap back to true and class_weight to balanced to speed up the calculation
-clf = RandomForestClassifier(500, criterion='gini', min_samples_split=1/11, max_features='auto', bootstrap=False,
-                             class_weight='balanced_subsample', warm_start=False)
+clf = RandomForestClassifier(70, criterion='entropy', max_features='sqrt', bootstrap=False,
+                             class_weight='balanced', warm_start=False)
+clf = AdaBoostClassifier(n_estimators=400, learning_rate=0.2)
+clf = DecisionTreeClassifier(criterion='gini', splitter='best', max_features='auto')
+clf.fit(X, y)
+
+# grid search
+from sklearn.model_selection import GridSearchCV
+# parameters = [{'n_estimators': [10, 20, 50, 70, 100, 120], 'criterion': ['gini'],
+#                'max_features': ['auto', 'sqrt', 'log2', None]},
+#               {'n_estimators': [10, 20, 50, 70, 100, 120], 'criterion': ['entropy'],
+#                'max_features': ['auto', 'sqrt', 'log2', None]}]
+
+# parameters = [{'n_estimators': [100, 200, 300, 500, 1000, 1500], 'learning_rate': [0.01, 0.1, 0.2, 0.5]}]
+parameters = [{'criterion': ['gini', 'entropy'], 'max_features': ['auto', 'sqrt', 'log2', None]}]
+
+grid_search = GridSearchCV(estimator=clf, param_grid=parameters, scoring='accuracy', cv = 2)
+grid_search = grid_search.fit(X, y)
+best_accuracy = grid_search.best_score_
+best_parameters = grid_search.best_params_
+clf.set_params(**best_parameters)
 clf.fit(X, y)
 
 # -----------------------------------------------------------------------------------
@@ -250,9 +293,9 @@ cv2.destroyAllWindows()
 final_proba = [0] * len(clf.classes_)
 for new_frame in cvt_frames:
     test_preds = fa.get_landmarks(new_frame)[-1]
-    new_pic = calculate_face(test_preds)
+    new_pic = calculate_face(test_preds, selected_points)
     new_pic = np.array(new_pic)
-    new_pic = pca.transform([new_pic])
+    #new_pic = pca.transform([new_pic])
 
     # get test pic
     # test_img = io.imread('attendence_face/dataset/train_fol/Ma Chí Định/IMG_E0301.JPG')
@@ -260,10 +303,18 @@ for new_frame in cvt_frames:
     # test_pic = calculate_face(test_preds)
     # predict at the point return likelihood of each classes instead of get the class name
     # show out the probability of the picture is belong to each class
-    tmp = clf.predict_proba(new_pic).tolist()[0]
+    tmp = clf.predict_proba([new_pic]).tolist()[0]
+    # max only comment the /= 5 to get max
+    # for i in range(len(tmp)):
+    #     if final_proba[i] < tmp[i]:
+    #         final_proba[i] = tmp[i]
+    # avg all uncomment the /= 5 to get avg, left comment for sum
     for i in range(len(tmp)):
-        if final_proba[i] < tmp[i]:
-            final_proba[i] = tmp[i]
+        final_proba[i] += tmp[i]
+
+for i in range(len(final_proba)):
+    final_proba[i] /= 5
+
 
 final_proba = np.array([final_proba])
 
@@ -275,52 +326,51 @@ final_proba = np.array([final_proba])
 # prob_each_class: is the array from predict_proba method return the probability of each class
 # clf_class_name: list of class names of the classifier (label)
 # thres: activation value, if prob > thres auto return name, otherwise go into detail abt the value
-def name_decider(name, prob_each_class, clf_class_name, thres):
-    # how this works
+def name_decider(prob_each_class, clf_class_name, thres, actv_thres):
+    # how this works get the index of the max probability -> index of class name
     # if n < 3: return name right away
+    # if max_prob < actv_thres return unknown right away
     # if max_prob >= thres also return name right away
     # if max_prob - 2nd_max >= 2/n also return name
     # if more than 3 max pos return unknown
     # else return 3 possible name
-
     max_prob = float(prob_each_class.max())
-    # the copy() method is crucial (similar to pass-by reference and pass-by value type of problem)
     tmp = prob_each_class.copy()
     tmp.sort()
     second_max_prob = float(tmp[0][-2])
     third_max_prob = float(tmp[0][-3])
     n_class = prob_each_class.shape[1]
-    if n_class < 3:
-        return name
-    if max_prob >= thres:
-        return name
-    if max_prob - second_max_prob >= 2 / n_class:
-        return name
-
-    # else case
-    max_pos = np.where(prob_each_class == max_prob)[1]
-    if len(max_pos) > 3:
-        return 'Unknown'
-    elif len(max_pos) == 3:
-        max_pos = max_pos.tolist()
-    elif len(max_pos) == 2:
-        max_pos = max_pos.tolist()
-        max_pos.append(np.where(prob_each_class == third_max_prob)[1].tolist()[0])
-    elif len(max_pos) == 1:
-        max_pos = max_pos.tolist()
-        second_pos = np.where(prob_each_class == second_max_prob)[1]
-        if len(second_pos) > 1:
-            for i in [0, 1]:
-                max_pos.append(second_pos.tolist()[i])
+    if np.count_nonzero(prob_each_class == max_prob) == 1:
+        name = clf_class_name[np.where(prob_each_class == max_prob)[1]][0]
+        # the copy() method is crucial (similar to pass-by reference and pass-by value type of problem)
+        if max_prob < actv_thres:
+            return 'Unknown'
+        if max_prob >= thres:
+            return name
+        if second_max_prob < actv_thres:
+            return name
+        if max_prob - second_max_prob >= 1 / n_class:
+            return name
         else:
-            max_pos.append(second_pos.tolist()[0])
-            third_pos = np.where(prob_each_class == third_max_prob)[1]
-            max_pos.append(third_pos.tolist()[0])
+            return (name, clf_class_name[np.where(prob_each_class == second_max_prob)[1]][0])
+    else:
+        max_pos = np.where(prob_each_class == max_prob)[1]
+        if len(max_pos) > 3:
+            return 'Unknown'
+        elif len(max_pos) == 3:
+            max_pos = max_pos.tolist()
+        elif len(max_pos) == 2:
+            max_pos = max_pos.tolist()
+            max_pos.append(np.where(prob_each_class == third_max_prob)[1].tolist()[0])
 
-    return tuple(clf_class_name[i] for i in max_pos)
+        return tuple(clf_class_name[i] for i in max_pos)
 
 
-name_decider(clf.predict(new_pic)[0], final_proba, clf.classes_, 0.6)
+# 0.55 for rf + max_prob (0.25 for activation thres)
+# 0.7 (even 0.8 for adaboost) + max_prob (0.4 for activation thres)
+# 0.4 for adaboost + avg_prob (0.2 for activation thres)
+# 0.4 for rf + avg_prob (0.25 for activation thres)
+name_decider(final_proba, clf.classes_, 0.7, 0.2)
 # get another image to the src folder
 # convert back to BGR colour space due to the way opencv organize colour channels
 # cv2.imwrite('me3.jpg', cv2.cvtColor(frame, cv2.COLOR_RGB2BGR),
