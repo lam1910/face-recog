@@ -5,11 +5,18 @@ import os
 import pandas as pd
 import torch
 import torch.backends.cudnn as cudnn
+import math
 
 from layers.functions.prior_box import PriorBox
 from utils.nms.py_cpu_nms import py_cpu_nms
 from models.retinaface import RetinaFace
 from utils.box_utils import decode, decode_landm
+from unidecode import unidecode
+
+
+# convert from tiếng việt có dấu to tieng viet khong dau
+def convert(s):
+    return unidecode(s)
 
 
 cfg_mnet = {
@@ -57,18 +64,22 @@ paths, names = load(PATH_TO_IMAGE)
 
 person_crucial_points = []
 for path in paths:
-    with open(path, 'r') as fptr:
-        # read the third line
-        for i in range(3):
-            best_match = fptr.readline()
-        best_match = best_match.split(' ')
-        x1, y1 = best_match[4:6]
-        x2, y2 = best_match[6:8]
-        x3, y3 = best_match[8:10]
-        x4, y4 = best_match[10:12]
-        x5, y5 = best_match[12:14]
-    person_crucial_points.append([(float(x1), float(y1)), (float(x2), float(y2)), (float(x3), float(y3)),
-                                  (float(x4), float(y4)), (float(x5), float(y5))])
+    # remove the picture captured by this webcam
+    if path == 'Pytorch_Retinaface/widerface_evaluate/real_face/Nguyễn_Ngọc_Lâm/me3.txt':
+        pass
+    else:
+        with open(path, 'r') as fptr:
+            # read the third line
+            for i in range(3):
+                best_match = fptr.readline()
+            best_match = best_match.split(' ')
+            x1, y1 = best_match[4:6]
+            x2, y2 = best_match[6:8]
+            x3, y3 = best_match[8:10]
+            x4, y4 = best_match[10:12]
+            x5, y5 = best_match[12:14]
+        person_crucial_points.append([(float(x1), float(y1)), (float(x2), float(y2)), (float(x3), float(y3)),
+                                      (float(x4), float(y4)), (float(x5), float(y5))])
 
 person_stats = []
 distances = []
@@ -87,7 +98,7 @@ for person in person_crucial_points:
             angles.append(angle)
 
     # compound distances and angles
-    distances = normalize(distances, -1, 1)
+    distances = normalize(distances, 0, 1)
     person_stat = distances + angles
     person_stats.append(person_stat)
     # reset distances, vectors and angles for next iter
@@ -95,12 +106,12 @@ for person in person_crucial_points:
     angles = []
     vectors = []
 
-from sklearn.decomposition import PCA
-pca = PCA(n_components=5, svd_solver='auto')
-person_stats = pca.fit_transform(person_stats)
-explained_variance = pca.explained_variance_ratio_
+#from sklearn.decomposition import PCA
+#pca = PCA(n_components=5, svd_solver='auto')
+#person_stats = pca.fit_transform(person_stats)
+#explained_variance = pca.explained_variance_ratio_
 retinaface_people = pd.DataFrame(person_stats)
-retinaface_people['Label'] = names
+retinaface_people['Label'] = names[:13] + names[14:]
 
 
 retinaface_people.to_excel('/home/lam/face-recog/dataset/wider_face_style_train/retinaface_real_people.xlsx',
@@ -160,11 +171,24 @@ cudnn.benchmark = True
 device = torch.device("cpu")
 net = net.to(device)
 
-clf = RandomForestClassifier(n_estimators=100, criterion='gini', max_features='sqrt', warm_start=False)
-clf = AdaBoostClassifier(n_estimators=50, learning_rate=0.1)
+#clf = RandomForestClassifier(n_estimators=100, criterion='gini', max_features='sqrt', warm_start=False)
+clf = AdaBoostClassifier(n_estimators=100, learning_rate=0.2)
 
 clf.fit(X, y)
+#applying grid search to find the best model
+from sklearn.model_selection import GridSearchCV
+parameters = [{'n_estimators': [100, 200, 500, 1000], 'learning_rate': [0.01, 0.1, 0.2, 0.5]}]
+
+grid_search = GridSearchCV(estimator=clf, param_grid=parameters, scoring='accuracy', cv = 2)
+grid_search = grid_search.fit(X, y)
+best_accuracy = grid_search.best_score_
+best_parameters = grid_search.best_params_
+clf.set_params(**best_parameters)
+# refit
+clf.fit(X, y)
+
 origin_size = True
+keep_top_k = 750
 
 video_capture = cv2.VideoCapture(0)
 process_this_frame = True
@@ -238,65 +262,94 @@ while True:
         landms = landms[keep]
 
         # keep top-K faster NMS
-        # dets = dets[:args.keep_top_k, :]
-        # landms = landms[:args.keep_top_k, :]
+        dets = dets[:keep_top_k, :]
+        landms = landms[:keep_top_k, :]
+
+        # take only dets with confident > 0.85
+        face_conf_mask = dets[:, -1] > 0.85
+        dets = dets[face_conf_mask, :]
+        landms = landms[face_conf_mask, :]
 
         # added lanmarks
-        try:
-            x1, y1 = landms[:, 0:2][0]
-            x2, y2 = landms[:, 2:4][0]
-            x3, y3 = landms[:, 4:6][0]
-            x4, y4 = landms[:, 6:8][0]
-            x5, y5 = landms[:, 8:10][0]
-
-            person = [(x1, y1), (x2, y2), (x3, y3), (x4, y4), (x5, y5)]
-            person_stats = []
-            distances = []
-            vectors = []
-            angles = []
-            for i in range(len(person)):
-                for j in range(i + 1, len(person)):
-                    distance = calculate_distance(person[i], person[j])
-                    distances.append(distance)
-                    vectors.append(np.asarray(person[j]) - np.asarray(person[i]))
-
-            for i in range(len(vectors)):
-                for j in range(i + 1, len(vectors)):
-                    angle = calculate_angle(vectors[i], vectors[j])
-                    angles.append(angle)
-
-            # compound distances and angles
-            distances = normalize(distances, -1, 1)
-            person_stat = distances + angles
-            person_stat = pca.transform([person_stat])
-            #person_stat = [person_stat]
-
-            face_names = clf.predict(person_stat)
-            face_prob = clf.predict_proba(person_stat).max()
-        except IndexError:
+        if len(landms) == 0:
             # Return a list to match how we call below
             face_names = ['Unknown']
             # although it is for sure not a face we can recognize from the db
-            # (because the system cannot detect any faces to begin with) we will treat it as probability 0 to match the
-            # activation function below
-            face_prob = 0.0
+            # (because the system cannot detect any faces to begin with) we will treat it as probability 1 to match
+            # the activation function below
+            face_probs = [1.0]
+        else:
+            person_stats = []
+            for i in range(len(landms)):
+                x1, y1 = landms[:, 0:2][i]
+                x2, y2 = landms[:, 2:4][i]
+                x3, y3 = landms[:, 4:6][i]
+                x4, y4 = landms[:, 6:8][i]
+                x5, y5 = landms[:, 8:10][i]
+
+                person = [(x1, y1), (x2, y2), (x3, y3), (x4, y4), (x5, y5)]
+                distances = []
+                vectors = []
+                angles = []
+                for k in range(len(person)):
+                    for j in range(k + 1, len(person)):
+                        distance = calculate_distance(person[k], person[j])
+                        distances.append(distance)
+                        vectors.append(np.asarray(person[j]) - np.asarray(person[k]))
+
+                for k in range(len(vectors)):
+                    for j in range(k + 1, len(vectors)):
+                        angle = calculate_angle(vectors[k], vectors[j])
+                        angles.append(angle)
+
+                # compound distances and angles
+                distances = normalize(distances, 0, 1)
+                person_stat = distances + angles
+                #person_stat = pca.transform([person_stat])
+                person_stats.append(person_stat)
+
+            face_names = clf.predict(person_stats)
+            face_probs = clf.predict_proba(person_stats)
+            try:
+                face_probs = np.amax(face_probs, 1)
+            except np.AxisError:
+                face_probs = [np.amax(face_probs, 0)]
+
 
     process_this_frame = not process_this_frame
-    for name in face_names:
+    new_names = []
+    for name, face_prob in zip(face_names, face_probs):
         # the frame that is not processed anything will be the one
         # that forced to print out result
-        old_name = name
         if face_prob < 0.6:
             name = 'Unknown'
 
+        new_names.append(name)
+
+    for name, face_prob in zip(new_names, face_probs):
         if not process_this_frame and face_prob != 0.0:
             if name != 'Unknown':
                 print(f'Output name: {name} name confidence of {face_prob}')
-            else:
-                print(f'Output name: {name} (was {old_name}) name confidence of {face_prob}')
-        elif face_prob == 0.0:
-            print('Something wrong with the input. Most likely a frame without a face detected in it. If this problem '
-                  'continues, make sure the input feed had a face in it')
+
+    # Display the results
+    box = dets[:, :-1]
+    for [left, top, right, bottom], name in zip(box, new_names):
+        left = math.ceil(left)
+        top = math.ceil(top)
+        right = math.ceil(right)
+        bottom = math.ceil(bottom)
+        # left = dets[0, 0] * resize / scale
+        # top = dets[0, 1] * resize / scale
+        # right = dets[0, 2] * resize / scale
+        # bottom = dets[0, 3] * resize / scale
+
+        # Draw a box around the face
+        cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
+
+        # Draw a label with a name below the face
+        cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
+        font = cv2.FONT_HERSHEY_DUPLEX
+        cv2.putText(frame, convert(name), (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
 
     # Display the resulting image
     cv2.imshow('Video', frame)
