@@ -367,10 +367,10 @@ def name_decider(prob_each_class, clf_class_name, thres, actv_thres):
 
 
 # 0.55 for rf + max_prob (0.25 for activation thres)
-# 0.7 (even 0.8 for adaboost) + max_prob (0.4 for activation thres)
+# 0.5 (even 0.6 for adaboost) + max_prob (0.4 for activation thres)
 # 0.4 for adaboost + avg_prob (0.2 for activation thres)
 # 0.4 for rf + avg_prob (0.25 for activation thres)
-name_decider(final_proba, clf.classes_, 0.7, 0.2)
+name_decider(final_proba, clf.classes_, 0.6, 0.35)
 # get another image to the src folder
 # convert back to BGR colour space due to the way opencv organize colour channels
 # cv2.imwrite('me3.jpg', cv2.cvtColor(frame, cv2.COLOR_RGB2BGR),
