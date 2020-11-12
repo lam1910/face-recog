@@ -190,5 +190,6 @@ def download_google_staticimages(pic_dirs, name):
     browser.close()
     return count
 
+
 for x in list_name_celeb:
     download_google_staticimages('pictures', x)
