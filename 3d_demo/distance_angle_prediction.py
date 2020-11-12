@@ -199,7 +199,7 @@ selected_points = [0, 3, 4, 7, 8, 9, 12, 13, 16, 17, 19, 21, 22, 24, 26, 27, 28,
 # final_label.append(names[idx_to_check])
 # -----------------------------------------------------------------------------------
 
-id_to_append = [0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19]
+id_to_append = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
 # code to substitute the code segment that had been commented above. Essentially going to get identical result
 preds = []
 final_label = []
@@ -260,7 +260,7 @@ clf.fit(X, y)
 # -----------------------------------------------------------------------------------
 # get a new picture to recognize
 # define a video capture object
-# list of 5 nearest frames
+# list of 10 nearest frames
 frames = []
 vid = cv2.VideoCapture(0)
 
@@ -269,9 +269,9 @@ while True:
     # Capture the video frame
     # by frame
     ret, frame = vid.read()
-    if len(frames) < 5:
+    if len(frames) < 10:
         frames.append(frame)
-    elif len(frames) == 5:
+    elif len(frames) == 10:
         to_rmv = frames.pop(0)
         frames.append(frame)
     # Display the resulting frame
@@ -313,7 +313,7 @@ for new_frame in cvt_frames:
         final_proba[i] += tmp[i]
 
 for i in range(len(final_proba)):
-    final_proba[i] /= 5
+    final_proba[i] /= len(frames)
 
 
 final_proba = np.array([final_proba])
