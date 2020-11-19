@@ -198,8 +198,9 @@ selected_points = [0, 3, 4, 7, 8, 9, 12, 13, 16, 17, 19, 21, 22, 24, 26, 27, 28,
 # preds.append(calculate_face(pred))
 # final_label.append(names[idx_to_check])
 # -----------------------------------------------------------------------------------
-
-id_to_append = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
+# 13/11: 28 to be checked
+id_to_append = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20, 21, 22, 23, 24, 25, 26, 29, 30,
+                31, 32, 33, 34, 35]
 # code to substitute the code segment that had been commented above. Essentially going to get identical result
 preds = []
 final_label = []
@@ -236,7 +237,7 @@ y = crit_3d.iloc[:, -1].values
 # want to set bootstrap back to true and class_weight to balanced to speed up the calculation
 clf = RandomForestClassifier(70, criterion='entropy', max_features='sqrt', bootstrap=False,
                              class_weight='balanced', warm_start=False)
-clf = AdaBoostClassifier(n_estimators=400, learning_rate=0.2)
+clf = AdaBoostClassifier(n_estimators=1000, learning_rate=0.5) # new param for dataset 13/11
 clf = DecisionTreeClassifier(criterion='gini', splitter='best', max_features='auto')
 clf.fit(X, y)
 
@@ -247,8 +248,9 @@ from sklearn.model_selection import GridSearchCV
 #               {'n_estimators': [10, 20, 50, 70, 100, 120], 'criterion': ['entropy'],
 #                'max_features': ['auto', 'sqrt', 'log2', None]}]
 
-# parameters = [{'n_estimators': [100, 200, 300, 500, 1000, 1500], 'learning_rate': [0.01, 0.1, 0.2, 0.5]}]
-parameters = [{'criterion': ['gini', 'entropy'], 'max_features': ['auto', 'sqrt', 'log2', None]}]
+parameters = [{'n_estimators': [100, 200, 300, 500, 1000, 1500],
+               'learning_rate': [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1, 0.2, 0.5]}]
+# parameters = [{'criterion': ['gini', 'entropy'], 'max_features': ['auto', 'sqrt', 'log2', None]}]
 
 grid_search = GridSearchCV(estimator=clf, param_grid=parameters, scoring='accuracy', cv = 2)
 grid_search = grid_search.fit(X, y)
@@ -373,7 +375,7 @@ def name_decider(prob_each_class, clf_class_name, thres, actv_thres):
 name_decider(final_proba, clf.classes_, 0.6, 0.35)
 # get another image to the src folder
 # convert back to BGR colour space due to the way opencv organize colour channels
-# cv2.imwrite('me3.jpg', cv2.cvtColor(frame, cv2.COLOR_RGB2BGR),
+# cv2.imwrite('me3.jpg', cv2.cvtColor(frame, cv2.COLOR_RGB2BGR),with
 #             [cv2.IMWRITE_JPEG_QUALITY, 100, cv2.IMWRITE_JPEG_OPTIMIZE, 1])
 # clf.predict([list(test_pic.values())])
 # -----------------------------------------------------------------------------------
