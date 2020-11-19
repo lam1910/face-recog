@@ -90,7 +90,9 @@ XlsxWriter==1.3.3
 zipp==3.1.0
 SPARQLWrapper~=1.8.5
 
-numpy~=1.18.5
+./numpy+mkl/numpy-1.19.2+mkl-cp38-cp38-win_amd64.whl
+./numpy+mkl/numpy-1.19.2+mkl-cp38-cp38-win32.whl
+./numpy+mkl/numpy-1.19.2+mkl-cp37-cp37m-win_amd64.whl
 torchvision~=0.7.0
 selenium~=3.141.0
 cython~=0.29.21
