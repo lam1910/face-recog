@@ -91,9 +91,10 @@ zipp==3.1.0
 SPARQLWrapper~=1.8.5
 
 ./numpy+mkl/numpy-1.19.2+mkl-cp38-cp38-win_amd64.whl
-./numpy+mkl/numpy-1.19.2+mkl-cp38-cp38-win32.whl
-./numpy+mkl/numpy-1.19.2+mkl-cp37-cp37m-win_amd64.whl
-torchvision~=0.7.0
+./pytorch/torch-1.7.0-cp38-cp38-win_amd64.whl
+./pytorch/torch-1.7.0-cp38-cp38-win_amd64.whl
+./pytorch/torchvision-0.8.1-cp38-cp38-win_amd64.whl
+
 selenium~=3.141.0
 cython~=0.29.21
 webdriver_manager
