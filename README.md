@@ -20,3 +20,5 @@
    
 4. There is an alternative method of using pytorch and torchvision on the script retinaface_data_processing. The script utilised Adaboost instead of random forest + a simple activation function.
 Note that this activation function does not fully eliminate mislabel inside people case, it is designed to limit the case of mislabel outside person as one that is in the system as much as possible
+
+5. The requirements file on the top level is the requirements to run the 3d_demo and attendence_face on windows. For linux, visit [linux requirements](Pytorch_Retinaface/requirements.txt). Note that the linux requirements has all the packages to run the whole repositories meanwhile windows requirements only allows to run demo on promising demo.
