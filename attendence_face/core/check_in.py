@@ -80,7 +80,7 @@ class CheckIn:
 
                 self.process_this_frame = not self.process_this_frame
                 for name in self.face_names:
-                    if name != 'Unknown':
+                    if name != 'Unknown' and not self.process_this_frame:
                         print('Output name: {}'.format(name))
 
                 # Display the resulting image

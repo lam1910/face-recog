@@ -7,11 +7,22 @@ from skimage import io
 import numpy as np
 import os
 import pandas as pd
+import pickle
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.svm import SVC
 # for small dataset, you might want to use decision tree
 from sklearn.tree import DecisionTreeClassifier
 import cv2
 from sklearn.decomposition import PCA
+import PIL.Image
+
+
+def png_to_jpg(path_to_image):
+    rgba_image = PIL.Image.open(path_to_image)
+    rgb_image = rgba_image.convert('RGB')
+    new_name = path_to_image.rsplit('.', 1)[0] + '.jpg'
+    rgb_image = rgb_image.save(new_name)
+
 
 
 def normalize(list_to_norm, start_range, stop_range):
@@ -110,31 +121,25 @@ def calculate_face(lists_of_landmarks, list_of_focused_points):
 def load(trainset_path):
     train_dir = os.listdir(trainset_path)
     paths = []
-    names = []
     # Loop through each person in the training directory
-    for person in train_dir:
+    for person_type in train_dir:
         try:
-            pix = os.listdir(trainset_path + person)
+            pix = os.listdir(trainset_path + person_type)
             # Loop through each training image for the current person
             for person_img in pix:
                 try:
-                    paths.append(trainset_path + person + '/' + person_img)
-                    if '_' in person:
-                        real_person = person.replace('_', ' ')
-                    else:
-                        real_person = person
-                    names.append(real_person)
+                    paths.append(trainset_path + person_type + '/' + person_img)
                 except IndexError:
-                    print('Cannot locate face. Skip this Image: ' + person + "/" + person_img)
+                    print('Cannot locate face. Skip this Image: ' + person_type + "/" + person_img)
         except NotADirectoryError:
             continue
-    return paths, names
+    return paths
 
 
 # Run the 3D face alignment on a test image, without CUDA.
 fa = face_alignment.FaceAlignment(face_alignment.LandmarksType._3D, device='cpu', flip_input=True)
 
-paths, names = load('dataset/wider_face_style_train/images/')
+paths = load('dataset/testset/')
 pred_type = collections.namedtuple('prediction_type', ['slice', 'color'])
 pred_types = {
     'face': pred_type(slice(0, 17), (0.682, 0.780, 0.909, 0.5)),
@@ -149,6 +154,7 @@ pred_types = {
 }
 selected_points = [0, 3, 4, 7, 8, 9, 12, 13, 16, 17, 19, 21, 22, 24, 26, 27, 28, 29, 30, 31, 33, 35, 36, 37, 38, 39,
                    40, 41, 42, 43, 44, 45, 46, 47, 50, 51, 52, 56, 57, 58, 61, 63, 67]
+
 # -----------------------------------------------------------------------------------
 # manually select which one the library can construct correctly the face
 # preds = []
@@ -198,130 +204,34 @@ selected_points = [0, 3, 4, 7, 8, 9, 12, 13, 16, 17, 19, 21, 22, 24, 26, 27, 28,
 # preds.append(calculate_face(pred))
 # final_label.append(names[idx_to_check])
 # -----------------------------------------------------------------------------------
-# 13/11: 28 to be checked
-# 26/11: all pictures now can be used
-id_to_append = list(range(len(paths)))
 # code to substitute the code segment that had been commented above. Essentially going to get identical result
 preds = []
-final_label = []
-for i in id_to_append:
+label = pd.read_csv('dataset/testset/label.txt')
+final_label = label.iloc[:, -1].values
+for i in range(len(paths)):
     input_img = io.imread(paths[i])
     pred = fa.get_landmarks(input_img)[-1]
     preds.append(calculate_face(pred, selected_points))
-    final_label.append(names[i])
-
-# applying pca
-#pca = PCA(n_components=16, svd_solver='auto')
-#preds = pca.fit_transform(preds)
 
 final_table = pd.DataFrame(preds)
 final_table['Label'] = final_label
-# # checkpoint at id = 8
-# with pd.ExcelWriter('dataset/test-3d.xlsx', 'openpyxl', mode='a') as wr:
-#     final_table.to_excel(wr, index=False)
+with pd.ExcelWriter('dataset/testset/testset-3d.xlsx', 'openpyxl', mode='w') as wr:
+    final_table.to_excel(wr, index=False)
 
-# get trainset
-# crit_3d = pd.read_excel('dataset/test-3d.xlsx')
-crit_3d = final_table.copy()
+#load trainset
+crit_3d = pd.read_excel('dataset/test-3d.xlsx')
 
-X = crit_3d.iloc[:, :-1].values
-y = crit_3d.iloc[:, -1].values
+X_train = crit_3d.iloc[:, :-1].values
+y_train = crit_3d.iloc[:, -1].values
+# load testset
+X_test = final_table.iloc[:, :-1].values
+y_test = final_table.iloc[:, -1].values
 
-# classifier
-# max_feature = auto since having small number of features already
-# min_sample_split is set to be 1 because of the size of the demo dataset. Idea dataset size: 5 pictures for each person
-# be aware of the problem that some picture cannot correctly built the 3d model of the face, suggested that all the
-# background of the pictures used to built the model be simple or not very colourful
-# bootstrap set to false also to deal with small sample size (or rather a lot of pictures have to be removed as they
-# cannot detect the face), and subsequently class_weight set to balanced_subsample. ith bigger sample size, you might
-# want to set bootstrap back to true and class_weight to balanced to speed up the calculation
-clf = RandomForestClassifier(10, criterion='gini', max_features=None, bootstrap=False,
-                             class_weight='balanced', warm_start=False)
+clf = AdaBoostClassifier(n_estimators=100, learning_rate=0.01)
 clf = RandomForestClassifier(200, criterion='gini', max_features='auto', bootstrap=False,
                              class_weight='balanced', warm_start=False)
-clf = AdaBoostClassifier(n_estimators=1000, learning_rate=0.5) # new param for dataset 13/11
-clf = DecisionTreeClassifier(criterion='entropy', splitter='best', max_features='log2')
-clf = SVC(kernel='rbf', gamma='scale', decision_function_shape='ovr')
-clf.fit(X, y)
-
-# grid search
-from sklearn.model_selection import GridSearchCV
-# parameters = [{'n_estimators': [10, 20, 50, 70, 100, 120], 'criterion': ['gini'],
-#                'max_features': ['auto', 'sqrt', 'log2', None]},
-#               {'n_estimators': [10, 20, 50, 70, 100, 120], 'criterion': ['entropy'],
-#                'max_features': ['auto', 'sqrt', 'log2', None]}]
-
-parameters = [{'n_estimators': [100, 200, 300, 500, 1000, 1500],
-               'learning_rate': [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1, 0.2, 0.5]}]
-# parameters = [{'criterion': ['gini', 'entropy'], 'max_features': ['auto', 'sqrt', 'log2', None]}]
-
-grid_search = GridSearchCV(estimator=clf, param_grid=parameters, scoring='accuracy', cv = 2)
-grid_search = grid_search.fit(X, y)
-best_accuracy = grid_search.best_score_
-best_parameters = grid_search.best_params_
-clf.set_params(**best_parameters)
-clf.fit(X, y)
-
-# -----------------------------------------------------------------------------------
-# get a new picture to recognize
-# define a video capture object
-# list of 10 nearest frames
-frames = []
-vid = cv2.VideoCapture(0)
-
-while True:
-
-    # Capture the video frame
-    # by frame
-    ret, frame = vid.read()
-    if len(frames) < 10:
-        frames.append(frame)
-    elif len(frames) == 10:
-        to_rmv = frames.pop(0)
-        frames.append(frame)
-    # Display the resulting frame
-    cv2.imshow('frame', frame)
-
-    # the 'q' button is set as the
-    # quitting button you may use any
-    # desired button of your choice
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-# After the loop release the cap object, convert the color channel of the last 5 pics
-cvt_frames = [cv2.cvtColor(old_frame, cv2.COLOR_BGR2RGB) for old_frame in frames]
-# frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-vid.release()
-# Destroy all the windows
-cv2.destroyAllWindows()
-
-final_proba = [0] * len(clf.classes_)
-for new_frame in cvt_frames:
-    test_preds = fa.get_landmarks(new_frame)[-1]
-    new_pic = calculate_face(test_preds, selected_points)
-    new_pic = np.array(new_pic)
-    #new_pic = pca.transform([new_pic])
-
-    # get test pic
-    # test_img = io.imread('attendence_face/dataset/train_fol/Ma Chí Định/IMG_E0301.JPG')
-    # test_preds = fa.get_landmarks(test_img)[-1]
-    # test_pic = calculate_face(test_preds)
-    # predict at the point return likelihood of each classes instead of get the class name
-    # show out the probability of the picture is belong to each class
-    tmp = clf.predict_proba([new_pic]).tolist()[0]
-    # max only comment the /= 5 to get max
-    # for i in range(len(tmp)):
-    #     if final_proba[i] < tmp[i]:
-    #         final_proba[i] = tmp[i]
-    # avg all uncomment the /= 5 to get avg, left comment for sum
-    for i in range(len(tmp)):
-        final_proba[i] += tmp[i]
-
-for i in range(len(final_proba)):
-    final_proba[i] /= len(frames)
-
-
-final_proba = np.array([final_proba])
+clf = SVC(kernel='rbf', gamma='scale', decision_function_shape='ovr', probability=True)
+clf.fit(X_train, y_train)
 
 
 # after this write function to decide whether the highest probability class is good enough for a conclusion
@@ -371,14 +281,48 @@ def name_decider(prob_each_class, clf_class_name, thres, actv_thres):
         return tuple(clf_class_name[i] for i in max_pos)
 
 
-# 0.55 for rf + max_prob (0.25 for activation thres)
-# 0.5 (even 0.6 for adaboost) + max_prob (0.4 for activation thres)
-# 0.4 for adaboost + avg_prob (0.2 for activation thres)
-# 0.4 for rf + avg_prob (0.25 for activation thres)
-name_decider(final_proba, clf.classes_, 0.6, 0.35)
-# get another image to the src folder
-# convert back to BGR colour space due to the way opencv organize colour channels
-# cv2.imwrite('me3.jpg', cv2.cvtColor(frame, cv2.COLOR_RGB2BGR),with
-#             [cv2.IMWRITE_JPEG_QUALITY, 100, cv2.IMWRITE_JPEG_OPTIMIZE, 1])
-# clf.predict([list(test_pic.values())])
-# -----------------------------------------------------------------------------------
+y_pred = clf.predict(X_test)
+y_pred_proba = clf.predict_proba(X_test)
+
+final_predicts = []
+for i in range(len(y_pred)):
+    print(str(i) + ': ')
+    tmp = name_decider(np.asarray([y_pred_proba[i]]), clf.classes_, 0.55, 0.4)
+    try:
+        print('Predicted: ' + tmp)
+    except TypeError:
+        for name in tmp:
+            print('Predicted: ' + name)
+    finally:
+        final_predicts.append(tmp)
+    print('True: ' + y_test[i])
+    if y_test[i] == 'Unknown' and tmp != 'Unknown':
+        print('Path to deflective: ' + paths[i])
+    if y_test[i] != 'Unknown':
+        print('Path to known image: ' + paths[i])
+    print('--------------------------------------------------\n')
+
+unknown_case = 0
+known_case = 0
+type_2 = 0
+type_1 = 0
+for predict, truth in zip(final_predicts, y_test):
+    if truth == 'Unknown' and predict == 'Unknown':
+        unknown_case += 1
+    elif truth == 'Unknown' and predict != 'Unknown':
+        unknown_case += 1
+        type_2 += 1
+    elif truth == predict:
+        known_case += 1
+    elif truth in predict:
+        known_case += 1
+    else:
+        known_case += 1
+        if truth != 'Nguyễn Ngọc Lâm':
+            # font does not match between file system
+            type_1 += 1
+
+
+
+
+

@@ -9,6 +9,10 @@ Created on Tue Sep  1 16:55:21 2020
 # Train multiple images per person
 # Adding ANN to method (deprecated) (removed)
 # adding adaboost to method
+import os
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"   # see issue #152
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
+
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.svm import SVC
 from utils.model_io import load_bin, export_bin
